@@ -76,13 +76,13 @@ const planner::AbstractPlan *PlanTransformer::BuildParallelPlan(
     planner::AbstractPlan *ret_ptr = nullptr;
     std::vector<planner::AbstractPlan *> child_plan_vec;
 
-    for (const planner::AbstractPlan *child : old_plan->GetChildren()) {
-      child_plan_vec.push_back(BuildParallelPlanUtil(child));
+    for (const auto&child : old_plan->GetChildren()) {
+      child_plan_vec.push_back(BuildParallelPlanUtil(child.get()));
     }
 
     ret_ptr = BuildParallelPlanUtil(old_plan);
     for (auto child_plan : child_plan_vec) {
-      ret_ptr->AddChild(child_plan);
+      ret_ptr->AddChild(std::unique_ptr<planner::AbstractPlan>(child_plan));
     }
 
     return ret_ptr;
