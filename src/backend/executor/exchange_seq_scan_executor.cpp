@@ -66,9 +66,7 @@ bool ExchangeSeqScanExecutor::DExecute() {
         std::function<void()> f_seq_scan =
             std::bind(&ExchangeSeqScanExecutor::ThreadExecute, this,
                       current_tile_group_offset_);
-        std::thread thread(f_seq_scan);
-        thread.join();
-        // ThreadManager::GetInstance().AddTask(f_seq_scan);
+        ThreadManager::GetInstance().AddTask(f_seq_scan);
 
         current_tile_group_offset_++;
       }
@@ -132,14 +130,14 @@ bool ExchangeSeqScanExecutor::DExecute() {
 
 void ExchangeSeqScanExecutor::ThreadExecute(oid_t assigned_tile_group_offset) {
   LOG_INFO(
-      "Parallel worker :: ExchangeSeqScanExecutor :: SeqScanThreadMain, "
-      "executor: %s with assigned tile group offset %lu" ,
+      "Parallel worker :: executor: %s with assigned tile group offset %lu" ,
       GetRawNode()->GetInfo().c_str(), assigned_tile_group_offset);
 
   bool seq_failure = false;
 
   auto &transaction_manager =
     concurrency::TransactionManagerFactory::GetInstance();
+  concurrency::current_txn = this->executor_context_->GetTransaction();
 
   auto tile_group = target_table_->GetTileGroup(assigned_tile_group_offset);
   auto tile_group_header = tile_group->GetHeader();
