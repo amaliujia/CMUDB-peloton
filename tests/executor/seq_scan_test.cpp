@@ -14,8 +14,6 @@
 #include <set>
 #include <string>
 #include <vector>
-#include <backend/planner/exchange_seq_scan_plan.h>
-#include <backend/executor/executors.h>
 
 #include "harness.h"
 
@@ -30,9 +28,11 @@
 #include "backend/executor/logical_tile.h"
 #include "backend/executor/logical_tile_factory.h"
 #include "backend/executor/seq_scan_executor.h"
+#include "backend/executor/exchange_seq_scan_executor.h"
 #include "backend/expression/abstract_expression.h"
 #include "backend/expression/expression_util.h"
 #include "backend/planner/seq_scan_plan.h"
+#include "backend/planner/exchange_seq_scan_plan.h"
 #include "backend/storage/data_table.h"
 #include "backend/storage/tile_group_factory.h"
 
@@ -193,7 +193,7 @@ executor::LogicalTile *GetNextTile(executor::AbstractExecutor &executor) {
  * that use it (especially the part that verifies values). Please be mindful
  * if you're making changes.
  */
-void RunTest(executor::SeqScanExecutor &executor, int expected_num_tiles,
+void RunTest(executor::ExchangeSeqScanExecutor &executor, int expected_num_tiles,
              int expected_num_cols) {
   EXPECT_TRUE(executor.Init());
   std::vector<std::unique_ptr<executor::LogicalTile>> result_tiles;
@@ -251,24 +251,25 @@ TEST_F(SeqScanTests, TwoTileGroupsWithPredicateTest) {
   std::vector<oid_t> column_ids({0, 1, 3});
 
   // Create plan node.
-  planner::SeqScanPlan t_node(table.get(), CreatePredicate(g_tuple_ids),
+  planner::SeqScanPlan node(table.get(), CreatePredicate(g_tuple_ids),
                             column_ids);
-  planner::ExchangeSeqScanPlan node(&t_node);
+  planner::ExchangeSeqScanPlan t_node(&node);
 
   auto &txn_manager = concurrency::TransactionManagerFactory::GetInstance();
   auto txn = txn_manager.BeginTransaction();
   std::unique_ptr<executor::ExecutorContext> context(
       new executor::ExecutorContext(txn));
 
-//  executor::SeqScanExecutor executor(&node, context.get());
-   executor::ExchangeSeqScanExecutor executor(&node, context.get());
-  RunTest(executor, table->GetTileGroupCount(), column_ids.size());
+   executor::SeqScanExecutor executor(&node, context.get());
+  // executor::ExchangeSeqScanExecutor executor(&node, context.get());
+  executor::ExchangeSeqScanExecutor t_executor(&t_node, context.get());
+  RunTest(t_executor, table->GetTileGroupCount(), column_ids.size());
 
   txn_manager.CommitTransaction();
 }
 
 // Sequential scan of logical tile with predicate.
-TEST_F(SeqScanTests, NonLeafNodePredicateTest) {
+/*TEST_F(SeqScanTests, NonLeafNodePredicateTest) {
   // No table for this case as seq scan is not a leaf node.
   storage::DataTable *table = nullptr;
 
@@ -315,7 +316,7 @@ TEST_F(SeqScanTests, NonLeafNodePredicateTest) {
   RunTest(executor, 2, expected_column_count);
 
   txn_manager.CommitTransaction();
-}
+}*/
 }
 
 }  // namespace test
