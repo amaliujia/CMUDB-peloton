@@ -14,6 +14,8 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <backend/planner/exchange_seq_scan_plan.h>
+#include <backend/executor/executors.h>
 
 #include "harness.h"
 
@@ -249,15 +251,17 @@ TEST_F(SeqScanTests, TwoTileGroupsWithPredicateTest) {
   std::vector<oid_t> column_ids({0, 1, 3});
 
   // Create plan node.
-  planner::SeqScanPlan node(table.get(), CreatePredicate(g_tuple_ids),
+  planner::SeqScanPlan t_node(table.get(), CreatePredicate(g_tuple_ids),
                             column_ids);
+  planner::ExchangeSeqScanPlan node(&t_node);
 
   auto &txn_manager = concurrency::TransactionManagerFactory::GetInstance();
   auto txn = txn_manager.BeginTransaction();
   std::unique_ptr<executor::ExecutorContext> context(
       new executor::ExecutorContext(txn));
 
-  executor::SeqScanExecutor executor(&node, context.get());
+//  executor::SeqScanExecutor executor(&node, context.get());
+   executor::ExchangeSeqScanExecutor executor(&node, context.get());
   RunTest(executor, table->GetTileGroupCount(), column_ids.size());
 
   txn_manager.CommitTransaction();
