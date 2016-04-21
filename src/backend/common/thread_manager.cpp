@@ -52,6 +52,10 @@ ThreadManager::~ThreadManager() {
   }  // end if
 }
 
+size_t ThreadManager::GetNumThreads() {
+  return thread_pool_.size();
+}
+
 void ThreadManager::AddTask(std::function<void()> f) {
   // Scope based locking.
   {

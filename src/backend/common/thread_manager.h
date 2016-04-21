@@ -42,6 +42,8 @@ class ThreadManager {
   // The main function: add task into the task queue
   void AddTask(std::function<void()> f);
 
+  size_t GetNumThreads();
+
   // The number of the threads should be inited
   ThreadManager(int threads);
   ~ThreadManager();

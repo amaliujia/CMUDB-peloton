@@ -12,7 +12,9 @@
 
 #pragma once
 
+#include "backend/common/barrier.h"
 #include "backend/planner/seq_scan_plan.h"
+#include "backend/planner/exchange_seq_scan_plan.h"
 #include "backend/executor/abstract_scan_executor.h"
 
 namespace peloton {
@@ -34,6 +36,11 @@ class SeqScanExecutor : public AbstractScanExecutor {
   bool DExecute();
 
  private:
+  void ThreadExecute(oid_t assigned_tile_group_offset_start,
+                     oid_t assigned_tile_group_offset_end,
+                     std::vector<LogicalTile *> *buffer,
+                     peloton::Barrier *barrier);
+
   //===--------------------------------------------------------------------===//
   // Executor State
   //===--------------------------------------------------------------------===//
@@ -50,6 +57,16 @@ class SeqScanExecutor : public AbstractScanExecutor {
 
   /** @brief Pointer to table to scan from. */
   storage::DataTable *target_table_ = nullptr;
+
+  /** @brief flag to show if do parallel scan. */
+  bool if_parallel_ = false;
+
+  /** @brief flag to show if parallel scan preparation done. */
+  bool parallel_done_ = false;
+
+  /** @brief Used to buffer theads' output */
+  std::deque<LogicalTile *> buffered_output_tiles;
+
 };
 
 }  // namespace executor
