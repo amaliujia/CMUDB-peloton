@@ -283,7 +283,7 @@ std::unique_ptr<executor::ExecutorContext> context(
   new executor::ExecutorContext(txn));
 
 executor::SeqScanExecutor executor(&t_node, context.get());
-RunTest(t_executor, table->GetTileGroupCount(), column_ids.size());
+RunTest(executor, table->GetTileGroupCount(), column_ids.size());
 
 txn_manager.CommitTransaction();
 }

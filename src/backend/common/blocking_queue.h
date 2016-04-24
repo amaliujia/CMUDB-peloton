@@ -9,7 +9,6 @@
 #include <condition_variable>
 
 namespace peloton {
-namespace executor {
 
 template <typename T>
 class BlockingQueue {
@@ -46,6 +45,5 @@ private:
     std::condition_variable cond_;
 };
 
-}  // namespace executor
 }  // namespace peloton
 

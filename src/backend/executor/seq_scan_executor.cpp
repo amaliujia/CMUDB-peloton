@@ -50,10 +50,11 @@ bool SeqScanExecutor::DInit() {
 
   if (!status) return false;
 
+  const auto &root_node = GetPlanNode<planner::AbstractPlan>();
   // Grab data from plan node.
-  assert(GetPlanNode()->GetPlanNodeType() == PLAN_NODE_TYPE_SEQSCAN ||
-          GetPlanNode()->GetPlanNodeType() == PLAN_NODE_TYPE_EXCHANGE_SEQSCAN);
-  if (GetPlanNode()->GetPlanNodeType() == PLAN_NODE_TYPE_SEQSCAN ) {
+  assert(root_node.GetPlanNodeType() == PLAN_NODE_TYPE_SEQSCAN ||
+          root_node.GetPlanNodeType() == PLAN_NODE_TYPE_EXCHANGE_SEQSCAN);
+  if (root_node.GetPlanNodeType() == PLAN_NODE_TYPE_SEQSCAN ) {
     const auto &node = GetPlanNode<planner::SeqScanPlan>();
     target_table_ = node.GetTable();
   } else {
@@ -111,8 +112,6 @@ bool SeqScanExecutor::DExecute() {
       SetOutput(tile.release());
       return true;
     }
-
-    return false;
   }
   // Scanning a table
   else if (children_.size() == 0) {
@@ -168,15 +167,16 @@ bool SeqScanExecutor::DExecute() {
         return true;
       }
     } else if (parallel_done_ == false){
-      std::vector<std::vector<LogicalTile *>> buffers;
-
       size_t num_worker = peloton::ThreadManager::GetInstance().GetNumThreads();
-      size_t task_size = (table_tile_group_count_ + num_worker) / num_worker;
+      
+      size_t num_tasks = (table_tile_group_count_ >= num_worker ? num_worker : table_tile_group_count_ ); 
+      size_t task_size = (table_tile_group_count_ / num_worker) + ((table_tile_group_count_ % num_worker) != 0 ? 1 : 0); 
 
-      peloton::Barrier barrier(num_worker);
+      std::vector<std::vector<LogicalTile *>> buffers(num_worker, std::vector<LogicalTile *>());
 
-      for (size_t i = 0; i < num_worker; i++) {
-        buffers.emplace_back(std::vector<std::unique_ptr<LogicalTile>>());
+      peloton::Barrier barrier(num_tasks);
+
+      for (size_t i = 0; i < num_tasks; i++) {
         oid_t start = i * task_size;
         oid_t end = (i + 1) * task_size - 1;
         if (end > (table_tile_group_count_ - 1)) {
@@ -196,18 +196,21 @@ bool SeqScanExecutor::DExecute() {
       for (const auto& v : buffers) {
         buffered_output_tiles.insert(buffered_output_tiles.end(), v.begin(), v.end());
       }
-
+      LOG_INFO("%lu LogicalTile in buffer", buffered_output_tiles.size());
       parallel_done_ = true;
       return DExecute();
     } else {
       if (buffered_output_tiles.empty() == false) {
         auto output_tile = buffered_output_tiles.front();
-        SetOutput(output_tile);
         buffered_output_tiles.pop_front();
-
-        return true;
+        
+        if (output_tile != nullptr) {
+          SetOutput(output_tile);
+          return true;
+        } else {
+          return DExecute();      
+        }
       }
-      return false;
     }
   }
 
@@ -273,6 +276,8 @@ void SeqScanExecutor::ThreadExecute(oid_t assigned_tile_group_offset_start,
         logical_tile->AddColumns(tile_group, column_ids_);
         logical_tile->AddPositionList(std::move(position_list));
         buffer->push_back(logical_tile.release());
+    } else {
+        buffer->push_back(nullptr);
     }
   }
 

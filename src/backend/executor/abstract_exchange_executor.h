@@ -6,7 +6,7 @@
 
 #include "backend/executor/abstract_executor.h"
 #include "backend/executor/abstract_parallel_task_response.h"
-#include "backend/common/blocking_queue.h
+#include "backend/common/blocking_queue.h"
 
 namespace peloton {
 namespace executor {
