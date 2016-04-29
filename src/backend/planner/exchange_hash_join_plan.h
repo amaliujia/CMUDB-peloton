@@ -53,6 +53,17 @@ public:
     return outer_column_ids_;
   }
 
+  std::unique_ptr<AbstractPlan> Copy() const {
+    std::unique_ptr<const expression::AbstractExpression> predicate_copy(
+      GetPredicate()->Copy());
+    std::shared_ptr<const catalog::Schema> schema_copy(
+      catalog::Schema::CopySchema(GetSchema()));
+    HashJoinPlan *new_plan = new HashJoinPlan(
+      GetJoinType(), std::move(predicate_copy),
+      std::move(GetProjInfo()->Copy()), schema_copy, outer_column_ids_);
+    return std::unique_ptr<AbstractPlan>(new_plan);
+  }
+
 private:
   std::vector<oid_t> outer_column_ids_;
 };
