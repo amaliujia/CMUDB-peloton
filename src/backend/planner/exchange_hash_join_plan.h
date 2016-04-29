@@ -58,7 +58,7 @@ public:
       GetPredicate()->Copy());
     std::shared_ptr<const catalog::Schema> schema_copy(
       catalog::Schema::CopySchema(GetSchema()));
-    HashJoinPlan *new_plan = new HashJoinPlan(
+    ExchangeHashJoinPlan *new_plan = new HashJoinPlan(
       GetJoinType(), std::move(predicate_copy),
       std::move(GetProjInfo()->Copy()), schema_copy, outer_column_ids_);
     return std::unique_ptr<AbstractPlan>(new_plan);
