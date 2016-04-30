@@ -779,7 +779,7 @@ for (auto join_algorithm : join_algorithms) {
       }
     }
 
-*/
+
 TEST_F(ExchangeHashJoinTests, LeftTableEmptyTest) {
   BuildTestTableUtil join_test;
         join_test.CreateTestTable();
@@ -787,19 +787,19 @@ TEST_F(ExchangeHashJoinTests, LeftTableEmptyTest) {
   for (auto join_algorithm : join_algorithms) {
     printf("JOIN ALGORITHM :: %s",
              PlanNodeTypeToString(join_algorithm).c_str());
-    join_test.ExecuteJoinTest(join_algorithm, JOIN_TYPE_RIGHT, LEFT_TABLE_EMPTY);
+    //join_test.ExecuteJoinTest(join_algorithm, JOIN_TYPE_RIGHT, LEFT_TABLE_EMPTY);
 
-    /*
+
     // Go over all join types
     for (auto join_type : join_types) {
       printf("JOIN TYPE :: %d", join_type);
       // Execute the join test
       join_test.ExecuteJoinTest(join_algorithm, join_type, LEFT_TABLE_EMPTY);
     }
-    */
+
   }
 }
-/*
+
 TEST_F(ExchangeHashJoinTests, RightTableEmptyTest) {
   BuildTestTableUtil join_test;
           join_test.CreateTestTable();
@@ -816,9 +816,11 @@ TEST_F(ExchangeHashJoinTests, RightTableEmptyTest) {
   }
 }
 
+
 TEST_F(ExchangeHashJoinTests, JoinPredicateTest) {
   oid_t join_test_types = 1;
-
+  BuildTestTableUtil join_test;
+          join_test.CreateTestTable();
   // Go over all join test types
   for (oid_t join_test_type = 0; join_test_type < join_test_types;
        join_test_type++) {
@@ -832,12 +834,13 @@ TEST_F(ExchangeHashJoinTests, JoinPredicateTest) {
       for (auto join_type : join_types) {
         LOG_INFO("JOIN TYPE :: %d", join_type);
         // Execute the join test
-        ExecuteJoinTest(join_algorithm, join_type, join_test_type);
+        join_test.ExecuteJoinTest(join_algorithm, join_type, join_test_type);
       }
     }
   }
 }
-
+*/
+/*
 TEST_F(ExchangeHashJoinTests, SpeedTest) {
       BuildTestTableUtil join_test;
       join_test.CreateTestTable();

@@ -409,8 +409,8 @@ namespace executor {
     bool ExchangeHashJoinExecutor::BuildRightJoinOutput() {
       printf("ExchangeHashJoinExecutor::BuildRightJoinOutput called.\n");
       auto curt_right_matching_idx = atomic_right_matching_idx.fetch_add(0);
-      printf("curt_right_matching_idx :%lu, no_matching_right_row_sets_: %lu\n", curt_right_matching_idx, no_matching_right_row_sets_.size());
-      while (curt_right_matching_idx  < no_matching_right_row_sets_.size()) {
+      printf("curt_right_matching_idx :%lu, exhj_no_matching_right_row_sets_: %lu\n", curt_right_matching_idx, exhj_no_matching_right_row_sets_.size());
+      while (curt_right_matching_idx  < exhj_no_matching_right_row_sets_.size()) {
         if (exhj_no_matching_right_row_sets_[curt_right_matching_idx ].Empty()) {
           curt_right_matching_idx = atomic_right_matching_idx.fetch_add(1);
           continue;
