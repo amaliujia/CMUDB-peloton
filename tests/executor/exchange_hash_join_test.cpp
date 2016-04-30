@@ -305,22 +305,22 @@ namespace peloton {
           hash_keys.emplace_back(right_table_attr_1);
 
           // Create hash plan node
-//          planner::HashPlan hash_plan_node(hash_keys);
-          planner::ExchangeHashPlan exchange_hash_plan_node(hash_keys);
+          planner::HashPlan hash_plan_node(hash_keys);
+//          planner::ExchangeHashPlan exchange_hash_plan_node(hash_keys);
 
 
           // Construct the hash executor
-          //executor::HashExecutor hash_executor(&hash_plan_node, nullptr);
-          executor::ExchangeHashExecutor hash_executor(&exchange_hash_plan_node, nullptr);
+          executor::HashExecutor hash_executor(&hash_plan_node, nullptr);
+//          executor::ExchangeHashExecutor hash_executor(&exchange_hash_plan_node, nullptr);
 
 
           // Create hash join plan node.
-//          planner::HashJoinPlan hash_join_plan_node(join_type, std::move(predicate),
-//                                                    std::move(projection), schema);
+          planner::HashJoinPlan hash_join_plan_node(join_type, std::move(predicate),
+                                                    std::move(projection), schema);
 
-          planner::ExchangeHashJoinPlan hash_join_plan_node(
-                                        join_type, std::move(predicate),
-                                        std::move(projection), schema);
+//          planner::ExchangeHashJoinPlan hash_join_plan_node(
+//                                        join_type, std::move(predicate),
+//                                        std::move(projection), schema);
 
 
           // Construct the hash join executor
@@ -806,7 +806,7 @@ TEST_F(ExchangeHashJoinTests, JoinPredicateTest) {
   }
 }
 */
-/*
+
 TEST_F(ExchangeHashJoinTests, SpeedTest) {
       BuildTestTableUtil join_test;
       join_test.CreateTestTable();
@@ -818,6 +818,6 @@ TEST_F(ExchangeHashJoinTests, SpeedTest) {
 
 
 }
-*/
+
   }  // namespace test
 }  // namespace peloton

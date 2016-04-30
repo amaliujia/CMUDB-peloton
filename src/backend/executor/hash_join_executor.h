@@ -38,8 +38,8 @@ class HashJoinExecutor : public AbstractJoinExecutor {
   bool DExecute();
 
  private:
-//  HashExecutor *hash_executor_ = nullptr;
-  ExchangeHashExecutor *hash_executor_ = nullptr;
+  HashExecutor *hash_executor_ = nullptr;
+//  ExchangeHashExecutor *hash_executor_ = nullptr;
 
   bool hashed_ = false;
 

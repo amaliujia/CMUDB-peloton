@@ -157,7 +157,7 @@ namespace executor {
 
               /*-------For testing cuckoo hashing -----------------------------*/
 
-
+              /*
               LogicalTile *right_tmp_tile = right_result_tiles_[location.first].get();
               const expression::ContainerTuple<executor::LogicalTile> right_tuple(
                 right_tmp_tile, location.second);
@@ -165,7 +165,7 @@ namespace executor {
               int left_tuple_join_attribute_val = left_tuple_test.GetValue(1).GetIntegerForTestsOnly();
               int right_tuple_join_attribute_val = right_tuple.GetValue(1).GetIntegerForTestsOnly();
               printf("testing 22222 --------- left value: %d, right value: %d\n", left_tuple_join_attribute_val, right_tuple_join_attribute_val);
-
+              */
               /*-------For testing cuckoo hashing -----------------------------*/
 
               // Check if we got a new right tile itr
@@ -469,11 +469,12 @@ namespace executor {
   * Update the row set with all rows from the last tile from right child
   */
     void ExchangeHashJoinExecutor::UpdateRightJoinRowSets() {
-      assert(left_result_tiles_.size() - no_matching_left_row_sets_.size() == 1);
+      assert(right_result_tiles_.size() - exhj_no_matching_right_row_sets_.size() == 1);
       ConcurrentOidSet set;
-      set.container_ = std::move(std::unordered_set<oid_t>(right_result_tiles_.back()->begin(),
-                                                           right_result_tiles_.back()->end()));
-
+//      set.container_ = std::move(std::unordered_set<oid_t>(right_result_tiles_.back()->begin(),
+//                                                           right_result_tiles_.back()->end()));
+      set.container_ = std::unordered_set<oid_t>(right_result_tiles_.back()->begin(),
+                                                           right_result_tiles_.back()->end());
 
       exhj_no_matching_right_row_sets_.emplace_back(std::move(set));
 
