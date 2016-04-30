@@ -118,17 +118,10 @@ namespace peloton {
       //  PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN};
       PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN};
 
-    /*
-  std::vector<PelotonJoinType> join_types = {JOIN_TYPE_INNER, JOIN_TYPE_LEFT,
-                                             JOIN_TYPE_RIGHT, JOIN_TYPE_OUTER};
-  */
 
     std::vector<PelotonJoinType> join_types = {JOIN_TYPE_INNER, JOIN_TYPE_LEFT,
                                               JOIN_TYPE_RIGHT, JOIN_TYPE_OUTER};
-//    std::vector<PelotonJoinType> join_types = {JOIN_TYPE_OUTER};
 
-//    void ExecuteJoinTest(PlanNodeType join_algorithm, PelotonJoinType join_type,
-//                         oid_t join_test_type);
 
     oid_t CountTuplesWithNullFields(executor::LogicalTile *logical_tile);
 
@@ -164,33 +157,6 @@ namespace peloton {
       //===--------------------------------------------------------------------===//
 
       MockExecutor left_table_scan_executor, right_table_scan_executor;
-
-/*
-    // Create a table and wrap it in logical tile
-  //  size_t tile_group_size = TESTS_TUPLES_PER_TILEGROUP;
-    size_t tile_group_size = 5;
-    size_t left_table_tile_group_count = 3;
-    size_t right_table_tile_group_count = 2;
-
-    auto &txn_manager = concurrency::TransactionManagerFactory::GetInstance();
-    auto txn = txn_manager.BeginTransaction();
-
-    // Left table has 3 tile groups
-    std::unique_ptr<storage::DataTable> left_table(
-        ExecutorTestsUtil::CreateTable(tile_group_size));
-    ExecutorTestsUtil::PopulateTable(
-        txn, left_table.get(), tile_group_size * left_table_tile_group_count,
-        false, false, false);
-
-    // Right table has 2 tile groups
-    std::unique_ptr<storage::DataTable> right_table(
-        ExecutorTestsUtil::CreateTable(tile_group_size));
-    ExecutorTestsUtil::PopulateTable(
-        txn, right_table.get(), tile_group_size * right_table_tile_group_count,
-        false, false, false);
-    txn_manager.CommitTransaction();
-
-*/
 
       if (join_test_type == COMPLICATED_TEST) {
         // Modify some values in left and right tables for complicated test
@@ -850,9 +816,7 @@ TEST_F(ExchangeHashJoinTests, SpeedTest) {
       join_test.ExecuteJoinTest(PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, JOIN_TYPE_OUTER, SPEED_TEST, true, 150);
       join_test.ExecuteJoinTest(PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, JOIN_TYPE_OUTER, SPEED_TEST, true, 200);
 
-//  ExecuteJoinTest(PLAN_NODE_TYPE_MERGEJOIN, JOIN_TYPE_OUTER, SPEED_TEST);
 
-//  ExecuteJoinTest(PLAN_NODE_TYPE_NESTLOOP, JOIN_TYPE_OUTER, SPEED_TEST);
 }
 */
   }  // namespace test
