@@ -21,13 +21,11 @@ namespace executor {
     ExchangeHashJoinExecutor::ExchangeHashJoinExecutor(const planner::AbstractPlan *node,
                                                        ExecutorContext *executor_context)
       : AbstractJoinExecutor(node, executor_context){
-      LOG_INFO("ExcchangeHashJoinExecutor constructor.");
     }
 
 
 
     bool ExchangeHashJoinExecutor::DInit() {
-      LOG_INFO("ExchangeHashJoinExecutor..init");
       assert(children_.size() == 2);
 
       auto status = AbstractJoinExecutor::DInit();

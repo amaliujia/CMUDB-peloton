@@ -685,6 +685,7 @@ namespace peloton {
       }
     }
 
+/*
 
 TEST_F(ExchangeHashJoinTests, BasicTest) {
 // Go over all join algorithms
@@ -805,15 +806,20 @@ TEST_F(ExchangeHashJoinTests, JoinPredicateTest) {
     }
   }
 }
-
+*/
 
 TEST_F(ExchangeHashJoinTests, SpeedTest) {
       BuildTestTableUtil join_test;
       join_test.CreateTestTable();
+      printf("PLAN_NODE_TYPE_HASH_JOIN\n");
       join_test.ExecuteJoinTest(PLAN_NODE_TYPE_HASHJOIN, JOIN_TYPE_OUTER, SPEED_TEST);
+      printf("PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, 50\n");
       join_test.ExecuteJoinTest(PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, JOIN_TYPE_OUTER, SPEED_TEST, true, 50);
+      printf("PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, 100\n");
       join_test.ExecuteJoinTest(PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, JOIN_TYPE_OUTER, SPEED_TEST, true, 100);
+      printf("PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, 150\n");
       join_test.ExecuteJoinTest(PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, JOIN_TYPE_OUTER, SPEED_TEST, true, 150);
+      printf("PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, 200\n");
       join_test.ExecuteJoinTest(PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, JOIN_TYPE_OUTER, SPEED_TEST, true, 200);
 
 
