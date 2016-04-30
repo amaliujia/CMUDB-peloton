@@ -123,7 +123,8 @@ namespace peloton {
                                              JOIN_TYPE_RIGHT, JOIN_TYPE_OUTER};
   */
 
-    std::vector<PelotonJoinType> join_types = {JOIN_TYPE_INNER, JOIN_TYPE_LEFT};
+    std::vector<PelotonJoinType> join_types = {JOIN_TYPE_INNER, JOIN_TYPE_LEFT,
+                                              JOIN_TYPE_RIGHT, JOIN_TYPE_OUTER};
 //    std::vector<PelotonJoinType> join_types = {JOIN_TYPE_OUTER};
 
 //    void ExecuteJoinTest(PlanNodeType join_algorithm, PelotonJoinType join_type,
@@ -649,12 +650,13 @@ namespace peloton {
         auto left_tuple_join_attribute_val = join_tuple.GetValue(0);
         auto right_tuple_join_attribute_val = join_tuple.GetValue(1);
 
-
+/*
         if (true) {
           printf("testing --------- left value: %d, right value: %d\n",
                  left_tuple_join_attribute_val.GetIntegerForTestsOnly(),
                  right_tuple_join_attribute_val.GetIntegerForTestsOnly());
         }
+*/
 
         EXPECT_TRUE(
           (left_tuple_join_attribute_val.IsNull() == true) ||
@@ -717,29 +719,37 @@ namespace peloton {
       }
     }
 
+/*
 TEST_F(ExchangeHashJoinTests, BasicTest) {
 // Go over all join algorithms
-  BuildTestTableUtil join_test;
-        join_test.CreateTestTable();
+BuildTestTableUtil join_test;
+join_test.CreateTestTable();
 
 for (auto join_algorithm : join_algorithms) {
   LOG_INFO("JOIN ALGORITHM :: %s",
            PlanNodeTypeToString(join_algorithm).c_str());
-  join_test.ExecuteJoinTest(join_algorithm, JOIN_TYPE_INNER, BASIC_TEST);
+
+  join_test.ExecuteJoinTest(join_algorithm, JOIN_TYPE_OUTER, BASIC_TEST);
 }
 }
-/*
+
 TEST_F(ExchangeHashJoinTests, EmptyTablesTest) {
 // Go over all join algorithms
+  BuildTestTableUtil join_test;
+  join_test.CreateTestTable();
 for (auto join_algorithm : join_algorithms) {
   LOG_INFO("JOIN ALGORITHM :: %s",
            PlanNodeTypeToString(join_algorithm).c_str());
-  ExecuteJoinTest(join_algorithm, JOIN_TYPE_INNER, BOTH_TABLES_EMPTY);
+  join_test.ExecuteJoinTest(join_algorithm, JOIN_TYPE_INNER, BOTH_TABLES_EMPTY);
 }
 }
 
+
 TEST_F(ExchangeHashJoinTests, JoinTypesTest) {
+  BuildTestTableUtil join_test;
+  join_test.CreateTestTable();
 // Go over all join algorithms
+
 for (auto join_algorithm : join_algorithms) {
   LOG_INFO("JOIN ALGORITHM :: %s",
            PlanNodeTypeToString(join_algorithm).c_str());
@@ -747,10 +757,11 @@ for (auto join_algorithm : join_algorithms) {
   for (auto join_type : join_types) {
     LOG_INFO("JOIN TYPE :: %d", join_type);
     // Execute the join test
-    ExecuteJoinTest(join_algorithm, join_type, BASIC_TEST);
+    join_test.ExecuteJoinTest(join_algorithm, join_type, BASIC_TEST);
   }
 }
 }
+
 
     TEST_F(ExchangeHashJoinTests, ComplicatedTest) {
       // Go over all join algorithms
@@ -768,22 +779,30 @@ for (auto join_algorithm : join_algorithms) {
       }
     }
 
-
+*/
 TEST_F(ExchangeHashJoinTests, LeftTableEmptyTest) {
+  BuildTestTableUtil join_test;
+        join_test.CreateTestTable();
   // Go over all join algorithms
   for (auto join_algorithm : join_algorithms) {
-    LOG_INFO("JOIN ALGORITHM :: %s",
+    printf("JOIN ALGORITHM :: %s",
              PlanNodeTypeToString(join_algorithm).c_str());
+    join_test.ExecuteJoinTest(join_algorithm, JOIN_TYPE_RIGHT, LEFT_TABLE_EMPTY);
+
+    /*
     // Go over all join types
     for (auto join_type : join_types) {
-      LOG_INFO("JOIN TYPE :: %d", join_type);
+      printf("JOIN TYPE :: %d", join_type);
       // Execute the join test
-      ExecuteJoinTest(join_algorithm, join_type, LEFT_TABLE_EMPTY);
+      join_test.ExecuteJoinTest(join_algorithm, join_type, LEFT_TABLE_EMPTY);
     }
+    */
   }
 }
-
+/*
 TEST_F(ExchangeHashJoinTests, RightTableEmptyTest) {
+  BuildTestTableUtil join_test;
+          join_test.CreateTestTable();
   // Go over all join algorithms
   for (auto join_algorithm : join_algorithms) {
     LOG_INFO("JOIN ALGORITHM :: %s",
@@ -792,7 +811,7 @@ TEST_F(ExchangeHashJoinTests, RightTableEmptyTest) {
     for (auto join_type : join_types) {
       LOG_INFO("JOIN TYPE :: %d", join_type);
       // Execute the join test
-      ExecuteJoinTest(join_algorithm, join_type, RIGHT_TABLE_EMPTY);
+      join_test.ExecuteJoinTest(join_algorithm, join_type, RIGHT_TABLE_EMPTY);
     }
   }
 }

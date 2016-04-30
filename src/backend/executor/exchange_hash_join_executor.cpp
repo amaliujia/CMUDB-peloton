@@ -44,7 +44,7 @@ namespace executor {
         printf("init : join_type: inner\n");
       }else if (join_type_ == JOIN_TYPE_LEFT){
 
-        printf("init : join_type: letr\n");
+        printf("init : join_type: left\n");
       }else if (join_type_ == JOIN_TYPE_RIGHT){
 
         printf("init : join_type: right\n");
@@ -78,9 +78,9 @@ namespace executor {
 //        printf("get one right child\n");
         BufferRightTile(children_[1]->GetOutput());
       }
-      LOG_INFO("Building Right Child Hashtable Phase done. \n");
-      LOG_INFO("hash_table size: %lu\n", hash_executor_->GetHashTable().size());
-      LOG_INFO("right result tiles size: %lu\n", right_result_tiles_.size());
+      printf("Building Right Child Hashtable Phase done. \n");
+      printf("hash_table size: %lu\n", hash_executor_->GetHashTable().size());
+      printf("right result tiles size: %lu\n", right_result_tiles_.size());
       barrier->Release();
     }
 
@@ -89,9 +89,12 @@ namespace executor {
       while(children_[0]->Execute()){
         BufferLeftTile(children_[0]->GetOutput());
       }
-      LOG_INFO("Get Left Child Done. \n");
-      LOG_INFO("left child size: %lu\n", left_result_tiles_.size());
-      printf("left_result_tiles.size():%lu, tuple num per tile:%lu\n", left_result_tiles_.size(), left_result_tiles_.back().get()->GetTupleCount());
+      printf("Get Left Child Done. \n");
+      if (left_result_tiles_.size() == 0){
+        printf("left child size: %lu\n", left_result_tiles_.size());
+      }else {
+        printf("left_result_tiles.size():%lu, tuple num per tile:%lu\n", left_result_tiles_.size(), left_result_tiles_.back().get()->GetTupleCount());
+      }
       barrier->Release();
     }
 
@@ -287,11 +290,10 @@ namespace executor {
           // partition sub tasks
           size_t left_child_size = left_result_tiles_.size();
           size_t partition_number = left_child_size / SIZE_PER_PARTITION;
-          printf("1....left_result_tiles.size():%lu, partition num in probe:%lu\n", left_child_size, partition_number);
           if (left_child_size % SIZE_PER_PARTITION != 0) {
             ++partition_number;
           }
-          printf("2....left_result_tiles.size():%lu, partition num in probe:%lu\n", left_child_size, partition_number);
+          printf("left_result_tiles.size():%lu, partition num in probe:%lu\n", left_child_size, partition_number);
 
 
           // sub tasks begin
@@ -343,8 +345,7 @@ namespace executor {
             LOG_INFO("real finish\n");
             return false;
           }
-//          }
-          //continue;
+
         }
 
       }
