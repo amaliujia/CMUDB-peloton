@@ -54,7 +54,6 @@ bool HashJoinExecutor::DInit() {
  */
 bool HashJoinExecutor::DExecute() {
   LOG_INFO("********** Hash Join executor :: 2 children \n");
-  printf("57\n");
 
   // Loop until we have non-empty result tile or exit
   for (;;) {
@@ -77,11 +76,8 @@ bool HashJoinExecutor::DExecute() {
 
     // Get all the tiles from RIGHT child
     if (right_child_done_ == false) {
-      printf("80\n");
       while (children_[1]->Execute()) {
-        printf("82\n");
         BufferRightTile(children_[1]->GetOutput());
-        printf("84\n");
       }
       right_child_done_ = true;
     }

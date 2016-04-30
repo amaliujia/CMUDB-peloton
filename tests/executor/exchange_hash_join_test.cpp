@@ -685,7 +685,7 @@ namespace peloton {
       }
     }
 
-/*
+
 TEST_F(ExchangeHashJoinTests, BasicTest) {
 // Go over all join algorithms
 BuildTestTableUtil join_test;
@@ -805,7 +805,7 @@ TEST_F(ExchangeHashJoinTests, JoinPredicateTest) {
     }
   }
 }
-*/
+
 
 TEST_F(ExchangeHashJoinTests, SpeedTest) {
       BuildTestTableUtil join_test;

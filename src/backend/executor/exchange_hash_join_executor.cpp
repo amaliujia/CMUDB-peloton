@@ -22,7 +22,6 @@ namespace executor {
                                                        ExecutorContext *executor_context)
       : AbstractJoinExecutor(node, executor_context){
       LOG_INFO("ExcchangeHashJoinExecutor constructor.");
-
     }
 
 
@@ -229,8 +228,6 @@ namespace executor {
  * @return true on success, false otherwise.
  */
     bool ExchangeHashJoinExecutor::DExecute() {
-      LOG_INFO("********** Hash Join executor :: 2 children \n");
-      LOG_DEBUG("********** Hash Join executor :: 2 children \n");
 
       // Loop until we have non-empty result tile or exit
       for (; ;) {
@@ -315,11 +312,8 @@ namespace executor {
         }
 
 
-
-
         // return ret (ont by one)
         if (lockfree_buffered_output_tiles.empty() == false) {
-          LOG_INFO("output");
           LogicalTile *output_tile = nullptr;
 //          bool ret = lockfree_buffered_output_tiles.pop(output_tile);
 //          assert(ret);
@@ -327,19 +321,13 @@ namespace executor {
           SetOutput(output_tile);
           return true;
         } else {
-          //todo: should return OuterJoin!!
-//          if (exec_outer_join_){
-//            return false;
-//          }else {
 
           main_end = std::chrono::system_clock::now();
           const std::chrono::duration<double> diff = main_end - main_start;
           const double ms = diff.count()*1000;
           printf("Inner part takes %lf ms \n", ms);
 
-
           if (BuildOuterJoinOutput()){
-            printf("output one outerjoin ret\n");
             continue;
           } else{
             LOG_INFO("real finish\n");
@@ -471,6 +459,7 @@ namespace executor {
     void ExchangeHashJoinExecutor::UpdateRightJoinRowSets() {
       assert(right_result_tiles_.size() - exhj_no_matching_right_row_sets_.size() == 1);
       ConcurrentOidSet set;
+      // not sure if move is safe....
 //      set.container_ = std::move(std::unordered_set<oid_t>(right_result_tiles_.back()->begin(),
 //                                                           right_result_tiles_.back()->end()));
       set.container_ = std::unordered_set<oid_t>(right_result_tiles_.back()->begin(),
@@ -484,13 +473,6 @@ namespace executor {
 //                                               right_result_tiles_.back()->end());
     }
 
-
-
-    //todo:
-    std::vector<LogicalTile *> ExchangeHashJoinExecutor::GetOutputs(){
-      std::vector<LogicalTile *> tmp;
-      return tmp;
-    }
 
 
   }  // namespace executor
