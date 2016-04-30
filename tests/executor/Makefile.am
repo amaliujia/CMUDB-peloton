@@ -18,7 +18,8 @@ check_PROGRAMS += \
 				  append_test \
 				  projection_test \
 				  tile_group_layout_test \
-				  loader_test
+				  loader_test			\
+				  exchange_hash_join_test
 
 executor_tests_common= 	executor/executor_tests_util.cpp \
 						harness.cpp
@@ -79,3 +80,8 @@ tile_group_layout_test_SOURCES = \
 loader_test_SOURCES = \
 					$(executor_tests_common) \
 					executor/loader_test.cpp
+
+exchange_hash_join_test_SOURCES = \
+					$(executor_tests_common) \
+						executor/exchange_hash_join_test.cpp \
+						executor/join_tests_util.cpp
