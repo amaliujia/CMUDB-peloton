@@ -1,15 +1,6 @@
-//===----------------------------------------------------------------------===//
 //
-//                         Peloton
+// Created by Lu Zhang on 4/29/16.
 //
-// hash_join_plan.h
-//
-// Identification: src/backend/planner/hash_join_plan.h
-//
-// Copyright (c) 2015-16, Carnegie Mellon University Database Group
-//
-//===----------------------------------------------------------------------===//
-
 #pragma once
 
 #include <memory>
@@ -52,7 +43,7 @@ class ExchangeHashJoinPlan : public AbstractJoinPlan {
   }
 
   inline PlanNodeType GetPlanNodeType() const {
-    return PLAN_NODE_TYPE_EXCHANGE_HASHJOIN;
+    return PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN;
   }
 
   const std::string GetInfo() const { return "ExchangeHashJoin"; }

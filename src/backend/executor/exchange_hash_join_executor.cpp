@@ -7,13 +7,12 @@
 #include "backend/common/types.h"
 #include "backend/common/logger.h"
 #include "backend/executor/logical_tile_factory.h"
-//#include "backend/executor/hash_join_executor.h"
 #include "backend/executor/exchange_hash_join_executor.h"
 #include "backend/expression/abstract_expression.h"
 #include "backend/expression/container_tuple.h"
 
 namespace peloton {
-  namespace executor {
+namespace executor {
 
 /**
  * @brief Constructor for hash join executor.
@@ -494,3 +493,4 @@ namespace peloton {
 
   }  // namespace executor
 }  // namespace peloton
+
