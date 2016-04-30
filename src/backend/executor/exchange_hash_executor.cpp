@@ -32,7 +32,7 @@ ExchangeHashExecutor::ExchangeHashExecutor(const planner::AbstractPlan *node,
  */
 bool ExchangeHashExecutor::DInit() {
   assert(children_.size() == 1);
-  printf("hello. exchangeHashExecutor");
+  printf("hello. exchangeHashExecutor\n");
   // Initialize executor state
   done_ = false;
   result_itr = 0;
@@ -78,7 +78,7 @@ void ExchangeHashExecutor::BuildHashTableThreadMain(LogicalTile *tile, size_t ch
  */
 bool ExchangeHashExecutor::DExecute() {
   LOG_INFO("Exchange Hash Executor");
-  printf("EHE\n");
+  printf("EHE81\n");
   if (done_ == false) {
     const planner::ExchangeHashPlan& node = GetPlanNode<planner::ExchangeHashPlan>();
 
@@ -90,14 +90,22 @@ bool ExchangeHashExecutor::DExecute() {
     * */
     auto &hashkeys = node.GetHashKeys();
     printf("EHE 92\n");
+    if (hashkeys.size() != 0){
+      printf("EHE 94 not null\n");
+    }else {
+      printf("EHE 96 null\n");
+    }
 
     for (auto &hashkey : hashkeys) {
+      printf("EHE 95\n");
       assert(hashkey->GetExpressionType() == EXPRESSION_TYPE_VALUE_TUPLE);
+      printf("EHE 97\n");
       auto tuple_value =
         reinterpret_cast<const expression::TupleValueExpression *>(
           hashkey.get());
       column_ids_.push_back(tuple_value->GetColumnId());
     }
+    printf("EHE 101\n");
 
     // First, get all the input logical tiles
     size_t child_tile_iter = 0;

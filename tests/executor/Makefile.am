@@ -83,5 +83,5 @@ loader_test_SOURCES = \
 
 exchange_hash_join_test_SOURCES = \
 					$(executor_tests_common) \
-						executor/join_test.cpp \
+						executor/exchange_hash_join_test.cpp \
 						executor/join_tests_util.cpp

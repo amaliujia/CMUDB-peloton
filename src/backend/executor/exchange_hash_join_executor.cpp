@@ -254,14 +254,16 @@ namespace executor {
             std::bind(&ExchangeHashJoinExecutor::GetRightHashTable, this, &build_hashtable_barrier);
           LaunchWorkerThreads(1, build_hashtable_worker);
 
+
+
+          printf("Wait for right child build to finish.\n");
+          build_hashtable_barrier.Wait();
+
           // collect all left children
           Barrier collect_scan_result_barrier(1);
           std::function<void()> collect_scan_result_worker =
             std::bind(&ExchangeHashJoinExecutor::GetLeftScanResult, this, &collect_scan_result_barrier);
           LaunchWorkerThreads(1, collect_scan_result_worker);
-
-          printf("Wait for right child build to finish.\n");
-          build_hashtable_barrier.Wait();
           printf("Wait for left child scan to finish.\n");
           collect_scan_result_barrier.Wait();
           printf("Ready to Probe.\n");

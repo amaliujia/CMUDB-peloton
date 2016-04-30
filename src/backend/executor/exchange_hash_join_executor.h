@@ -92,13 +92,7 @@ namespace peloton {
     };
 
 
-    // helper function to launch number worker threads, each of which will do function
-    static void LaunchWorkerThreads(size_t number, std::function<void()> function){
-      LOG_TRACE("LaunchWorkerThreads(%lu)", number);
-      ThreadManager &tm = ThreadManager::GetInstance();
-      for(size_t i=0; i<number; ++i)
-        tm.AddTask(function);
-    }
+
 
 
 
@@ -123,6 +117,14 @@ namespace peloton {
       void Probe(std::atomic<thread_no> *no, Barrier *barrier) ;
       void UpdateLeftJoinRowSets();
       void UpdateRightJoinRowSets();
+
+      // helper function to launch number worker threads, each of which will do function
+      static void LaunchWorkerThreads(size_t number, std::function<void()> function){
+        LOG_TRACE("LaunchWorkerThreads(%lu)", number);
+        ThreadManager &tm = ThreadManager::GetInstance();
+        for(size_t i=0; i<number; ++i)
+          tm.AddTask(function);
+      }
 
       inline void RecordMatchedLeftRow(size_t tile_idx, oid_t row_idx) {
 //        printf("Begin----------RecordMatchedLeftRow.\n");
