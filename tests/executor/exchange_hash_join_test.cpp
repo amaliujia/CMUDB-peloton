@@ -116,14 +116,14 @@ namespace peloton {
     std::vector<PlanNodeType> join_algorithms = {
 //    PLAN_NODE_TYPE_NESTLOOP, PLAN_NODE_TYPE_MERGEJOIN, PLAN_NODE_TYPE_HASHJOIN, PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN};
       //  PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN};
-      PLAN_NODE_TYPE_HASHJOIN};
+      PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN};
 
     /*
   std::vector<PelotonJoinType> join_types = {JOIN_TYPE_INNER, JOIN_TYPE_LEFT,
                                              JOIN_TYPE_RIGHT, JOIN_TYPE_OUTER};
   */
 
-    std::vector<PelotonJoinType> join_types = {JOIN_TYPE_INNER};
+    std::vector<PelotonJoinType> join_types = {JOIN_TYPE_INNER, JOIN_TYPE_LEFT};
 //    std::vector<PelotonJoinType> join_types = {JOIN_TYPE_OUTER};
 
 //    void ExecuteJoinTest(PlanNodeType join_algorithm, PelotonJoinType join_type,
@@ -351,8 +351,9 @@ namespace peloton {
 //          planner::HashJoinPlan hash_join_plan_node(join_type, std::move(predicate),
 //                                                    std::move(projection), schema);
 
-          planner::ExchangeHashJoinPlan hash_join_plan_node(join_type, std::move(predicate),
-                                                    std::move(projection), schema);
+          planner::ExchangeHashJoinPlan hash_join_plan_node(
+                                        join_type, std::move(predicate),
+                                        std::move(projection), schema);
 
 
           // Construct the hash join executor
@@ -400,18 +401,21 @@ namespace peloton {
           hash_keys.emplace_back(right_table_attr_1);
 
           // Create hash plan node
-          planner::HashPlan hash_plan_node(hash_keys);
+          //planner::HashPlan hash_plan_node(hash_keys);
+          planner::ExchangeHashPlan exchange_hash_plan_node(hash_keys);
 
           // Construct the hash executor
-      executor::ExchangeHashExecutor parallel_hash_executor(&hash_plan_node, nullptr);
+          executor::ExchangeHashExecutor parallel_hash_executor(&exchange_hash_plan_node, nullptr);
           //executor::HashExecutor hash_executor(&hash_plan_node, nullptr);
 
           // Create hash join plan node.
-          planner::HashJoinPlan hash_join_plan_node(join_type, std::move(predicate),
+          //planner::HashJoinPlan hash_join_plan_node(join_type, std::move(predicate),
+//                                                    std::move(projection), schema);
+          planner::ExchangeHashJoinPlan exchange_hash_join_plan_node(join_type, std::move(predicate),
                                                     std::move(projection), schema);
 
           // Construct the hash join executor
-          executor::ExchangeHashJoinExecutor exchange_hash_join_executor(&hash_join_plan_node,
+          executor::ExchangeHashJoinExecutor exchange_hash_join_executor(&exchange_hash_join_plan_node,
                                                                          nullptr);
 
           // Construct the executor tree
