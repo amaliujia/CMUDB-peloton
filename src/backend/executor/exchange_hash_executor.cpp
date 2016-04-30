@@ -32,7 +32,7 @@ ExchangeHashExecutor::ExchangeHashExecutor(const planner::AbstractPlan *node,
  */
 bool ExchangeHashExecutor::DInit() {
   assert(children_.size() == 1);
-
+  printf("hello. exchange Hash Executor\n");
   // Initialize executor state
   done_ = false;
   result_itr = 0;
@@ -78,7 +78,6 @@ void ExchangeHashExecutor::BuildHashTableThreadMain(LogicalTile *tile, size_t ch
  */
 bool ExchangeHashExecutor::DExecute() {
   LOG_INFO("Exchange Hash Executor");
-
   if (done_ == false) {
     const planner::ExchangeHashPlan& node = GetPlanNode<planner::ExchangeHashPlan>();
 

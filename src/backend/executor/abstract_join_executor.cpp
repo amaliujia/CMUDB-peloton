@@ -362,6 +362,7 @@ void AbstractJoinExecutor::UpdateFullJoinRowSets() {
  * there will be a match later.
  */
 bool AbstractJoinExecutor::BuildOuterJoinOutput() {
+  //printf("AbstractJoinExecutor::BuildOuterJoinOutput called.\n");
   assert(join_type_ != JOIN_TYPE_INVALID);
 
   switch (join_type_) {
@@ -393,7 +394,6 @@ bool AbstractJoinExecutor::BuildOuterJoinOutput() {
       break;
     }
   }
-
   return false;
 }
 /*
