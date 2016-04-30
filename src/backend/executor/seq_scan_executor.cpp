@@ -222,11 +222,11 @@ void SeqScanExecutor::ThreadExecute(oid_t assigned_tile_group_offset_start,
                                     oid_t assigned_tile_group_offset_end,
                                     std::vector<LogicalTile *> *buffer,
                                     peloton::Barrier *barrier) {
-  LOG_INFO(
-    "Parallel worker :: executor: %s with assigned tile group range %lu %lu" ,
-    GetRawNode()->GetInfo().c_str(),
-    assigned_tile_group_offset_start,
-    assigned_tile_group_offset_end);
+//  LOG_INFO(
+//    "Parallel worker :: executor: %s with assigned tile group range %lu %lu" ,
+//    GetRawNode()->GetInfo().c_str(),
+//    assigned_tile_group_offset_start,
+//    assigned_tile_group_offset_end);
 
   auto &transaction_manager =
     concurrency::TransactionManagerFactory::GetInstance();
