@@ -31,6 +31,8 @@ HashJoinExecutor::HashJoinExecutor(const planner::AbstractPlan *node,
     : AbstractJoinExecutor(node, executor_context) {}
 
 bool HashJoinExecutor::DInit() {
+  printf("hello. HashJOinExecutor");
+
   assert(children_.size() == 2);
 
   auto status = AbstractJoinExecutor::DInit();
@@ -38,7 +40,9 @@ bool HashJoinExecutor::DInit() {
 
   assert(children_[1]->GetRawNode()->GetPlanNodeType() == PLAN_NODE_TYPE_HASH);
 
-  hash_executor_ = reinterpret_cast<HashExecutor *>(children_[1]);
+//  hash_executor_ = reinterpret_cast<HashExecutor *>(children_[1]);
+  hash_executor_ = reinterpret_cast<ExchangeHashExecutor *>(children_[1]);
+
 
   return true;
 }
@@ -50,6 +54,7 @@ bool HashJoinExecutor::DInit() {
  */
 bool HashJoinExecutor::DExecute() {
   LOG_INFO("********** Hash Join executor :: 2 children \n");
+  printf("57\n");
 
   // Loop until we have non-empty result tile or exit
   for (;;) {
@@ -72,8 +77,11 @@ bool HashJoinExecutor::DExecute() {
 
     // Get all the tiles from RIGHT child
     if (right_child_done_ == false) {
+      printf("80\n");
       while (children_[1]->Execute()) {
+        printf("82\n");
         BufferRightTile(children_[1]->GetOutput());
+        printf("84\n");
       }
       right_child_done_ = true;
     }
@@ -113,13 +121,19 @@ bool HashJoinExecutor::DExecute() {
           left_tile, left_tile_itr, &hashed_col_ids);
 
       // Find matching tuples in the hash table built on top of the right table
-      auto right_tuples = hash_table.find(left_tuple);
 
-      if (right_tuples != hash_table.end()) {
+//      auto right_tuples = hash_table.find(left_tuple);
+      executor::ExchangeHashExecutor::MapValueType right_tuples;
+      bool if_match = hash_table.find(left_tuple, right_tuples);
+
+//      if (right_tuples != hash_table.end()) {
+      if (if_match){
+
         RecordMatchedLeftRow(left_result_tiles_.size() - 1, left_tile_itr);
 
         // Go over the matching right tuples
-        for (auto &location : right_tuples->second) {
+//        for (auto &location : right_tuples->second) {
+        for (auto &location : right_tuples) {
           // Check if we got a new right tile itr
           if (prev_tile != location.first) {
             // Check if we have any join tuples

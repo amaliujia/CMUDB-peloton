@@ -59,6 +59,7 @@ bool AbstractExecutor::Init() {
 
   for (auto child : children_) {
     status = child->Init();
+    printf("child init..\n");
     if (status == false) {
       LOG_ERROR("Initialization failed in child executor with plan id : %s",
                 child->node_->GetInfo().c_str());
