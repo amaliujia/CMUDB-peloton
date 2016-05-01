@@ -146,6 +146,7 @@ namespace peloton {
       SPEED_TEST = 3,
       LEFT_TABLE_EMPTY = 4,
       RIGHT_TABLE_EMPTY = 5,
+      LargeTableCorrectnessTest = 10,
     };
 
 
@@ -219,7 +220,7 @@ namespace peloton {
       // Setup left table
       //===--------------------------------------------------------------------===//
       if (join_test_type == BASIC_TEST || join_test_type == COMPLICATED_TEST ||
-          join_test_type == SPEED_TEST) {
+          join_test_type == SPEED_TEST || join_test_type == LargeTableCorrectnessTest) {
         ExpectNormalTileResults(BuildTestTableUtil::left_table_tile_group_count,
                                 &left_table_scan_executor,
                                 left_table_logical_tile_ptrs);
@@ -249,7 +250,7 @@ namespace peloton {
       //===--------------------------------------------------------------------===//
 
       if (join_test_type == BASIC_TEST || join_test_type == COMPLICATED_TEST ||
-          join_test_type == SPEED_TEST) {
+          join_test_type == SPEED_TEST || join_test_type == LargeTableCorrectnessTest) {
         ExpectNormalTileResults(BuildTestTableUtil::right_table_tile_group_count,
                                 &right_table_scan_executor,
                                 right_table_logical_tile_ptrs);
@@ -454,7 +455,33 @@ namespace peloton {
             throw Exception("Unsupported join type : " + std::to_string(join_type));
             break;
         }
+      }else if (join_test_type == LargeTableCorrectnessTest) {
+        // Check output
+        switch (join_type) {
+          case JOIN_TYPE_INNER:
+            EXPECT_EQ(result_tuple_count, 10);
+            EXPECT_EQ(tuples_with_null, 0);
+            break;
 
+          case JOIN_TYPE_LEFT:
+            EXPECT_EQ(result_tuple_count, 15);
+            EXPECT_EQ(tuples_with_null, 5);
+            break;
+
+          case JOIN_TYPE_RIGHT:
+            EXPECT_EQ(result_tuple_count, 10);
+            EXPECT_EQ(tuples_with_null, 0);
+            break;
+
+          case JOIN_TYPE_OUTER:
+            EXPECT_EQ(result_tuple_count, 15);
+            EXPECT_EQ(tuples_with_null, 5);
+            break;
+
+          default:
+            throw Exception("Unsupported join type : " + std::to_string(join_type));
+            break;
+        }
       } else if (join_test_type == BOTH_TABLES_EMPTY) {
         // Check output
         switch (join_type) {
@@ -685,8 +712,6 @@ namespace peloton {
       }
     }
 
-
-
 TEST_F(ExchangeHashJoinTests, BasicTest) {
 // Go over all join algorithms
 BuildTestTableUtil join_test;
@@ -809,34 +834,36 @@ TEST_F(ExchangeHashJoinTests, JoinPredicateTest) {
 
 
 /*
-    TEST_F(ExchangeHashJoinTests, LargeTableCorrectnessTest) {
-    // Go over all join algorithms
-    BuildTestTableUtil join_test;
-    join_test.CreateTestTable();
+TEST_F(ExchangeHashJoinTests, LargeTableCorrectnessTest) {
+  // Go over all join algorithms
+  BuildTestTableUtil join_test;
+  join_test.CreateTestTable();
 
-    for (auto join_algorithm : join_algorithms) {
-      LOG_INFO("JOIN ALGORITHM :: %s",
-               PlanNodeTypeToString(join_algorithm).c_str());
+  join_test.ExecuteJoinTest(PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, JOIN_TYPE_INNER, LargeTableCorrectnessTest);
+  join_test.ExecuteJoinTest(PLAN_NODE_TYPE_HASHJOIN, JOIN_TYPE_INNER, LargeTableCorrectnessTest);
 
-      join_test.ExecuteJoinTest(join_algorithm, JOIN_TYPE_OUTER, BASIC_TEST);
-    }
-    }
+//  for (auto join_algorithm : join_algorithms) {
+//    LOG_INFO("JOIN ALGORITHM :: %s",
+//             PlanNodeTypeToString(join_algorithm).c_str());
+
+//    join_test.ExecuteJoinTest(join_algorithm, JOIN_TYPE_OUTER, BASIC_TEST);
+//  }
+}
 */
-
-    /*
+  /*
 TEST_F(ExchangeHashJoinTests, SpeedTest) {
-      BuildTestTableUtil join_test;
-      join_test.CreateTestTable();
-      printf("PLAN_NODE_TYPE_HASH_JOIN\n");
-      join_test.ExecuteJoinTest(PLAN_NODE_TYPE_HASHJOIN, JOIN_TYPE_OUTER, SPEED_TEST);
-      printf("PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, 50\n");
-      join_test.ExecuteJoinTest(PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, JOIN_TYPE_OUTER, SPEED_TEST, true, 50);
-      printf("PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, 100\n");
-      join_test.ExecuteJoinTest(PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, JOIN_TYPE_OUTER, SPEED_TEST, true, 100);
-      printf("PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, 150\n");
-      join_test.ExecuteJoinTest(PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, JOIN_TYPE_OUTER, SPEED_TEST, true, 150);
-      printf("PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, 200\n");
-      join_test.ExecuteJoinTest(PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, JOIN_TYPE_OUTER, SPEED_TEST, true, 200);
+  BuildTestTableUtil join_test;
+  join_test.CreateTestTable();
+  printf("PLAN_NODE_TYPE_HASH_JOIN\n");
+  join_test.ExecuteJoinTest(PLAN_NODE_TYPE_HASHJOIN, JOIN_TYPE_OUTER, SPEED_TEST);
+  printf("PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, 50\n");
+  join_test.ExecuteJoinTest(PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, JOIN_TYPE_OUTER, SPEED_TEST, true, 50);
+  printf("PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, 100\n");
+  join_test.ExecuteJoinTest(PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, JOIN_TYPE_OUTER, SPEED_TEST, true, 100);
+  printf("PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, 150\n");
+  join_test.ExecuteJoinTest(PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, JOIN_TYPE_OUTER, SPEED_TEST, true, 150);
+  printf("PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, 200\n");
+  join_test.ExecuteJoinTest(PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, JOIN_TYPE_OUTER, SPEED_TEST, true, 200);
 }
 */
 
