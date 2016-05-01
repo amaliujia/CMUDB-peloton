@@ -38,7 +38,7 @@ class ExchangeHashJoinPlan : public AbstractJoinPlan {
       const std::vector<oid_t>& outer_hashkeys) 
       : AbstractJoinPlan(join_type, std::move(predicate), std::move(proj_info),
                          proj_schema) {
-    outer_column_ids_ = outer_hashkeys;  // added for IN-subquery
+      outer_column_ids_ = outer_hashkeys;  // added for IN-subquery
   }
 
   inline PlanNodeType GetPlanNodeType() const {

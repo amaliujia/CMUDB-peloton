@@ -51,10 +51,12 @@ static planner::AbstractPlan *BuildParalleHashJoinPlan(
 
   std::shared_ptr<const catalog::Schema> shared_schema(plan->GetSchema());
   const std::vector<oid_t> outer_column_ids = plan->GetOuterHashIds();
- 
+
+  const expression::AbstractExpression *expression_ptr = plan->GetPredicate()->Copy();
+
   planner::AbstractPlan *exchange_hash_join_plan =
-        new planner::ExchangeHashJoinPlan(plan->GetJoinType(),
-                                          plan->GetPredicate()->Copy(),
+                                          new planner::ExchangeHashJoinPlan(plan->GetJoinType(),
+                                      std::unique_ptr<const expression::AbstractExpression> predicate(expression_ptr),
                                           plan->GetProjInfo()->Copy(),
                                           shared_schema,
                                           outer_column_ids);
