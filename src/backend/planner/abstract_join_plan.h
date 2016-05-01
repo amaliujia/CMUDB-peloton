@@ -67,6 +67,10 @@ class AbstractJoinPlan : public AbstractPlan {
     return proj_schema_.get();
   }
 
+  const std::shared_ptr<const catalog::Schema>& GetSharedSchema() const {
+    return proj_schema_;
+  }
+
   std::unique_ptr<AbstractPlan> Copy() const = 0;
 
  private:
