@@ -3,6 +3,7 @@
 //
 
 #include "backend/planner/hash_plan.h"
+#include "backend/planner/hash_join_plan.h"
 #include "backend/planner/exchange_hash_plan.h"
 #include "backend/planner/exchange_hash_join_plan.h"
 #include "backend/planner/exchange_seq_scan_plan.h"
