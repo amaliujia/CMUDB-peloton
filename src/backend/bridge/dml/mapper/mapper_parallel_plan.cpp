@@ -2,6 +2,7 @@
 // Created by Rui Wang on 16-4-4.
 //
 
+#include "backend/planner/hash_join_plan.h"
 #include "backend/planner/hash_plan.h"
 #include "backend/planner/hash_join_plan.h"
 #include "backend/planner/exchange_hash_plan.h"
@@ -52,7 +53,7 @@ static planner::AbstractPlan *BuildParalleHashJoinPlan(
         new planner::ExchangeHashJoinPlan(plan->GetJoinType(),
                                           plan->GetPredicate()->Copy(),
                                           plan->GetProjInfo()->Copy(),
-                                          plan->GetSchema()->Copy(),
+                                          plan->GetSharedSchema(),
                                           plan->GetOuterHashIds());
   return exchange_hash_join_plan;
 }
