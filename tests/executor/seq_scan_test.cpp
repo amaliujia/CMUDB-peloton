@@ -28,7 +28,6 @@
 #include "backend/executor/logical_tile.h"
 #include "backend/executor/logical_tile_factory.h"
 #include "backend/executor/seq_scan_executor.h"
-#include "backend/executor/exchange_seq_scan_executor.h"
 #include "backend/expression/abstract_expression.h"
 #include "backend/expression/expression_util.h"
 #include "backend/planner/seq_scan_plan.h"
