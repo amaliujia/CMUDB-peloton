@@ -822,7 +822,6 @@ TEST_F(ExchangeHashJoinTests, SpeedTest) {
       printf("PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, 200\n");
       join_test.ExecuteJoinTest(PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN, JOIN_TYPE_OUTER, SPEED_TEST, true, 200);
 
-
 }
 
   }  // namespace test
