@@ -53,13 +53,14 @@ static planner::AbstractPlan *BuildParalleHashJoinPlan(
   const std::vector<oid_t> outer_column_ids = plan->GetOuterHashIds();
 
   const expression::AbstractExpression *expression_ptr = plan->GetPredicate()->Copy();
+  std::unique_ptr<const expression::AbstractExpression> predicate(expression_ptr);
 
   planner::AbstractPlan *exchange_hash_join_plan =
-                                          new planner::ExchangeHashJoinPlan(plan->GetJoinType(),
-                                      std::unique_ptr<const expression::AbstractExpression> predicate(expression_ptr),
-                                          plan->GetProjInfo()->Copy(),
-                                          shared_schema,
-                                          outer_column_ids);
+    new planner::ExchangeHashJoinPlan(plan->GetJoinType(),
+                                      std::move(predicate),
+                                      plan->GetProjInfo()->Copy(),
+                                      shared_schema,
+                                      outer_column_ids);
   return exchange_hash_join_plan;
 }
 
