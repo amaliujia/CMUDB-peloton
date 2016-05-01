@@ -49,11 +49,14 @@ static planner::AbstractPlan *BuildParalleHashJoinPlan(
     "Mapping hash join plan to parallel hash join plan");
   const planner::HashJoinPlan *plan =
     dynamic_cast<const planner::HashJoinPlan *>(hash_join_plan);
+
+  std::shared_ptr<const catalog::Schema> shared_schema(plan->GetSchema());
+
   planner::AbstractPlan *exchange_hash_join_plan =
         new planner::ExchangeHashJoinPlan(plan->GetJoinType(),
                                           plan->GetPredicate()->Copy(),
                                           plan->GetProjInfo()->Copy(),
-                                          plan->GetSharedSchema(),
+                                          shared_schema,
                                           plan->GetOuterHashIds());
   return exchange_hash_join_plan;
 }
