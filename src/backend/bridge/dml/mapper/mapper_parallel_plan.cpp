@@ -2,13 +2,12 @@
 // Created by Rui Wang on 16-4-4.
 //
 
-#include "backend/planner/hash_join_plan.h"
+#include "backend/planner/seq_scan_plan.h"
 #include "backend/planner/hash_plan.h"
 #include "backend/planner/hash_join_plan.h"
 #include "backend/planner/exchange_hash_plan.h"
 #include "backend/planner/exchange_hash_join_plan.h"
 #include "backend/planner/exchange_seq_scan_plan.h"
-#include "backend/planner/seq_scan_plan.h"
 #include "backend/bridge/dml/mapper/mapper.h"
 
 namespace peloton {
@@ -51,13 +50,14 @@ static planner::AbstractPlan *BuildParalleHashJoinPlan(
     dynamic_cast<const planner::HashJoinPlan *>(hash_join_plan);
 
   std::shared_ptr<const catalog::Schema> shared_schema(plan->GetSchema());
-
+  const std::vector<oid_t> outer_column_ids = plan->GetOuterHashIds();
+ 
   planner::AbstractPlan *exchange_hash_join_plan =
         new planner::ExchangeHashJoinPlan(plan->GetJoinType(),
                                           plan->GetPredicate()->Copy(),
                                           plan->GetProjInfo()->Copy(),
                                           shared_schema,
-                                          plan->GetOuterHashIds());
+                                          outer_column_ids);
   return exchange_hash_join_plan;
 }
 
