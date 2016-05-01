@@ -263,6 +263,14 @@ executor::AbstractExecutor *BuildExecutorTree(
       child_executor = new executor::SeqScanExecutor(plan, executor_context);
       break;
 
+    case PLAN_NODE_TYPE_EXCHANGE_HASH:
+      child_executor = new executor::ExchangeHashExecutor(plan, executor_context);
+      break;
+
+    case PLAN_NODE_TYPE_EXCHANGE_HASH_JOIN:
+      child_executor = new executor::ExchangeHashJoinExecutor(plan, executor_context);
+      break;
+
     default:
       LOG_ERROR("Unsupported plan node type : %d ", plan_node_type);
       break;

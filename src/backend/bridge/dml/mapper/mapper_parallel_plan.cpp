@@ -4,6 +4,7 @@
 
 #include "backend/planner/hash_plan.h"
 #include "backend/planner/exchange_hash_plan.h"
+#include "backend/planner/exchange_hash_join_plan.h"
 #include "backend/planner/exchange_seq_scan_plan.h"
 #include "backend/planner/seq_scan_plan.h"
 #include "backend/bridge/dml/mapper/mapper.h"
@@ -14,12 +15,11 @@ namespace bridge {
 typedef const expression::AbstractExpression HashKeyType;
 typedef std::unique_ptr<HashKeyType> HashKeyPtrType;
 
-static planner::AbstractPlan *BuildParallelHashPlan(const planner::AbstractPlan *old_plan) {
-  LOG_TRACE("Mapping hash plan to parallel seq scan plan (add exchange has "
-              "operator)");
+static planner::AbstractPlan *BuildParallelHashPlan(const planner::AbstractPlan *hash_plan) {
+  LOG_INFO("Mapping hash plan to parallel hash plan");
 
-  const planner::HashPlan *plan = dynamic_cast<const planner::HashPlan *>(old_plan);
-  const auto&  hash_keys = plan->GetHashKeys();
+  const planner::HashPlan *plan = dynamic_cast<const planner::HashPlan *>(hash_plan);
+  const auto& hash_keys = plan->GetHashKeys();
   std::vector<HashKeyPtrType> copied_hash_keys;
     for (const auto &key : hash_keys) {
       const expression::AbstractExpression *temp_key = key->Copy();
@@ -32,14 +32,28 @@ static planner::AbstractPlan *BuildParallelHashPlan(const planner::AbstractPlan 
 static planner::AbstractPlan *BuildParallelSeqScanPlan(
     const planner::AbstractPlan *seq_scan_plan) {
   /* Grab the target table */
-  LOG_TRACE(
-      "Mapping seq scan plan to parallel seq scan plan (add exchange seq scan "
-      "operator)");
+  LOG_INFO(
+      "Mapping seq scan plan to parallel seq scan plan");
   const planner::SeqScanPlan *plan =
       dynamic_cast<const planner::SeqScanPlan *>(seq_scan_plan);
   planner::AbstractPlan *exchange_seq_scan_plan =
       new planner::ExchangeSeqScanPlan(plan);
   return exchange_seq_scan_plan;
+}
+
+static planner::AbstractPlan *BuildParalleHashJoinPlan(
+  const planner::AbstractPlan *hash_join_plan) {
+  LOG_INFO(
+    "Mapping hash join plan to parallel hash join plan");
+  const planner::HashJoinPlan *plan =
+    dynamic_cast<const planner::HashJoinPlan *>(hash_join_plan);
+  planner::AbstractPlan *exchange_hash_join_plan =
+        new planner::ExchangeHashJoinPlan(plan->GetJoinType(),
+                                          plan->GetPredicate()->Copy(),
+                                          plan->GetProjInfo()->Copy(),
+                                          plan->GetSchema()->Copy(),
+                                          plan->GetOuterHashIds());
+  return exchange_hash_join_plan;
 }
 
 static planner::AbstractPlan *BuildParallelPlanUtil(
@@ -50,7 +64,7 @@ static planner::AbstractPlan *BuildParallelPlanUtil(
     case PLAN_NODE_TYPE_HASH:
       return BuildParallelHashPlan(old_plan);
     case PLAN_NODE_TYPE_HASHJOIN:
-    // TODO: HashJoin
+      return BuildParalleHashJoinPlan(old_plan);
     default:
       return old_plan->Copy().release();
   }
