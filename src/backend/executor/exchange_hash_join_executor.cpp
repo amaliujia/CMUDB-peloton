@@ -32,7 +32,6 @@ namespace executor {
       if (status == false) return status;
 
 
-
       const planner::AbstractJoinPlan &node____ =
         GetPlanNode<planner::AbstractJoinPlan>();
 
@@ -110,6 +109,7 @@ namespace executor {
 
 //      LOG_INFO("Probe Task picked up \n");
       printf("Probe Task picked up \n");
+      printf("GetTupleCount: %lu\n", left_result_tiles_.back()->GetTupleCount());
 
       auto &hash_table = hash_executor_->GetHashTable();
       auto &hashed_col_ids = hash_executor_->GetHashKeyIds();

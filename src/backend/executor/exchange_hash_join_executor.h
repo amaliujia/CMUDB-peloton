@@ -188,7 +188,7 @@ namespace peloton {
 //      size_t right_logical_tile_itr_ = 0;
       bool no_need_to_probe_ = false;
 //  const size_t SIZE_PER_PARTITION = 150;
-      size_t SIZE_PER_PARTITION = 100;
+     size_t SIZE_PER_PARTITION = 100;
 
       ExHashJoinRowSets exhj_no_matching_right_row_sets_;
 

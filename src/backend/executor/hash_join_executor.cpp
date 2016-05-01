@@ -31,7 +31,7 @@ HashJoinExecutor::HashJoinExecutor(const planner::AbstractPlan *node,
     : AbstractJoinExecutor(node, executor_context) {}
 
 bool HashJoinExecutor::DInit() {
-  printf("hello. HashJOinExecutor");
+  printf("hello. HashJOinExecutor\n");
 
   assert(children_.size() == 2);
 
