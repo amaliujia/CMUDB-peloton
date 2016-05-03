@@ -132,15 +132,24 @@ bool SeqScanExecutor::DExecute() {
 
         oid_t active_tuple_count = tile_group->GetNextTupleSlot();
 
+
         // Construct position list by looping through tile group
         // and applying the predicate.
         std::vector<oid_t> position_list;
         for (oid_t tuple_id = 0; tuple_id < active_tuple_count; tuple_id++) {
+
+          ItemPointer location(tile_group->GetTileGroupId(), tuple_id);
+
           // check transaction visibility
           if (transaction_manager.IsVisible(tile_group_header, tuple_id)) {
             // if the tuple is visible, then perform predicate evaluation.
             if (predicate_ == nullptr) {
               position_list.push_back(tuple_id);
+              auto res = transaction_manager.PerformRead(location);
+              if (!res) {
+                transaction_manager.SetTransactionResult(RESULT_FAILURE);
+                return res;
+              }
             } else {
               expression::ContainerTuple<storage::TileGroup> tuple(
                 tile_group.get(), tuple_id);
@@ -148,25 +157,31 @@ bool SeqScanExecutor::DExecute() {
                 .IsTrue();
               if (eval == true) {
                 position_list.push_back(tuple_id);
+                auto res = transaction_manager.PerformRead(location);
+                if (!res) {
+                  transaction_manager.SetTransactionResult(RESULT_FAILURE);
+                  return res;
+
+                }
               }
             }
           }
+
+          // Don't return empty tiles
+          if (position_list.size() == 0) {
+            continue;
+          }
+
+          // Construct logical tile.
+          std::unique_ptr<LogicalTile> logical_tile(LogicalTileFactory::GetTile());
+          logical_tile->AddColumns(tile_group, column_ids_);
+          logical_tile->AddPositionList(std::move(position_list));
+
+          SetOutput(logical_tile.release());
+          return true;
         }
-
-        // Don't return empty tiles
-        if (position_list.size() == 0) {
-          continue;
-        }
-
-        // Construct logical tile.
-        std::unique_ptr<LogicalTile> logical_tile(LogicalTileFactory::GetTile());
-        logical_tile->AddColumns(tile_group, column_ids_);
-        logical_tile->AddPositionList(std::move(position_list));
-
-        SetOutput(logical_tile.release());
-        return true;
       }
-    } else if (parallel_done_ == false){
+    }else if (parallel_done_ == false){
       size_t num_worker = peloton::ThreadManager::GetInstance().GetNumThreads();
       
       size_t num_tasks = (table_tile_group_count_ >= num_worker ? num_worker : table_tile_group_count_ ); 
@@ -203,12 +218,12 @@ bool SeqScanExecutor::DExecute() {
       if (buffered_output_tiles.empty() == false) {
         auto output_tile = buffered_output_tiles.front();
         buffered_output_tiles.pop_front();
-        
+
         if (output_tile != nullptr) {
           SetOutput(output_tile);
           return true;
         } else {
-          return DExecute();      
+          return DExecute();
         }
       }
     }
