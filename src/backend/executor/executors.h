@@ -32,3 +32,4 @@
 #include "backend/executor/projection_executor.h"
 #include "backend/executor/exchange_hash_join_executor.h"
 #include "backend/executor/exchange_hash_executor.h"
+#include "backend/executor/exchange_seq_scan_executor.h"
