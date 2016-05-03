@@ -30,7 +30,8 @@ public:
 
   ExchangeSeqScanPlan(const ExchangeSeqScanPlan *seq_scan_plan)
     : AbstractScan(seq_scan_plan->GetTable(),
-                   seq_scan_plan->GetPredicate()->Copy(),
+                   seq_scan_plan->GetPredicate() == nullptr ?
+                   nullptr : seq_scan_plan->GetPredicate()->Copy(),
                    seq_scan_plan->GetColumnIds())
       {}
 

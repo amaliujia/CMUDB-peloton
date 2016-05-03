@@ -52,13 +52,21 @@ static planner::AbstractPlan *BuildParalleHashJoinPlan(
   std::shared_ptr<const catalog::Schema> shared_schema(plan->GetSchema());
   const std::vector<oid_t> outer_column_ids = plan->GetOuterHashIds();
 
-  const expression::AbstractExpression *expression_ptr = plan->GetPredicate()->Copy();
+  const expression::AbstractExpression *expression_ptr =
+    (plan->GetPredicate() == nullptr ? nullptr : plan->GetPredicate()->Copy());
   std::unique_ptr<const expression::AbstractExpression> predicate(expression_ptr);
+
+  const planner::ProjectInfo *projectInfo_ptr = plan->GetProjInfo();
+
+  std::unique_ptr<const planner::ProjectInfo> project_info_unique_ptr =
+    (projectInfo_ptr == nullptr) ?
+    std::unique_ptr<const planner::ProjectInfo>() :
+    plan->GetProjInfo()->Copy();
 
   planner::AbstractPlan *exchange_hash_join_plan =
     new planner::ExchangeHashJoinPlan(plan->GetJoinType(),
                                       std::move(predicate),
-                                      plan->GetProjInfo()->Copy(),
+                                      std::move(project_info_unique_ptr),
                                       shared_schema,
                                       outer_column_ids);
   return exchange_hash_join_plan;
