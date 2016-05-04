@@ -76,15 +76,13 @@ class TileGroup : public Printable {
   // copy tuple in place.
   void CopyTuple(const Tuple *tuple, const oid_t &tuple_slot_id);
 
-  void CopyTuple(const oid_t &tuple_slot_id, Tuple *tuple);
-
   // insert tuple at next available slot in tile if a slot exists
   oid_t InsertTuple(const Tuple *tuple);
 
   // insert tuple at specific tuple slot
   // used by recovery mode
   oid_t InsertTupleFromRecovery(cid_t commit_id, oid_t tuple_slot_id,
-                                const Tuple *tuple);
+                    const Tuple *tuple);
 
   // insert tuple at specific tuple slot
   // used by recovery mode
@@ -92,11 +90,10 @@ class TileGroup : public Printable {
 
   // insert tuple at specific tuple slot
   // used by recovery mode
-  oid_t UpdateTupleFromRecovery(cid_t commit_id, oid_t tuple_slot_id,
-                                ItemPointer new_location);
+  oid_t UpdateTupleFromRecovery(cid_t commit_id, oid_t tuple_slot_id, ItemPointer new_location);
 
-  oid_t InsertTupleFromCheckpoint(oid_t tuple_slot_id, const Tuple *tuple,
-                                  cid_t commit_id);
+  oid_t InsertTupleFromCheckpoint(oid_t tuple_slot_id,
+                    const Tuple *tuple, cid_t commit_id);
 
   //===--------------------------------------------------------------------===//
   // Utilities
@@ -107,8 +104,7 @@ class TileGroup : public Printable {
 
   oid_t GetNextTupleSlot() const;
 
-  // this function is called only when building tile groups for aggregation
-  // operations.
+  // this function is called only when building tile groups for aggregation operations.
   oid_t GetActiveTupleCount() const;
 
   oid_t GetAllocatedTupleCount() const { return num_tuple_slots; }
@@ -184,7 +180,7 @@ class TileGroup : public Printable {
   TileGroupHeader *tile_group_header;
 
   // associated table
-  AbstractTable *table;  // this design is fantastic!!!
+  AbstractTable *table;  // TODO: Remove this! It is a waste of space!!
 
   // number of tuple slots allocated
   oid_t num_tuple_slots;

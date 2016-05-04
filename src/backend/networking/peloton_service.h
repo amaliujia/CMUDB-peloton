@@ -93,10 +93,6 @@ class PelotonService : public AbstractPelotonService {
                         const TimeSyncRequest* request,
                         TimeSyncResponse* response,
                         ::google::protobuf::Closure* done);
-    virtual void QueryPlan(::google::protobuf::RpcController* controller,
-            const QueryPlanExecRequest* request,
-            QueryPlanExecResponse* response,
-            ::google::protobuf::Closure* done);
 };
 
 }  // namespace networking

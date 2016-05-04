@@ -16,10 +16,9 @@
 #include "backend/common/platform.h"
 #include "backend/common/printable.h"
 #include "backend/logging/log_manager.h"
-#include "backend/gc/gc_manager.h"
-#include "backend/expression/container_tuple.h"
 
 #include <atomic>
+#include <mutex>
 #include <iostream>
 #include <cassert>
 #include <queue>
@@ -41,8 +40,7 @@ namespace storage {
  *
  *  -----------------------------------------------------------------------------
  *  | TxnID (8 bytes)  | BeginTimeStamp (8 bytes) | EndTimeStamp (8 bytes) |
- *  | NextItemPointer (8 bytes) | PrevItemPointer (8 bytes) | IndexCount(4 bytes) | 
- *  | ReservedField (24 bytes)
+ *  | NextItemPointer (16 bytes) | PrevItemPointer (16 bytes) | ReservedField (24 bytes)
  *  | InsertCommit (1 byte) | DeleteCommit (1 byte)
  *  -----------------------------------------------------------------------------
  *
@@ -66,7 +64,7 @@ class TileGroupHeader : public Printable {
     memcpy(data, other.data, header_size);
 
     num_tuple_slots = other.num_tuple_slots;
-    oid_t val = other.next_tuple_slot;
+    unsigned long long val = other.next_tuple_slot;
     next_tuple_slot = val;
 
     return *this;
@@ -76,8 +74,7 @@ class TileGroupHeader : public Printable {
 
   // this function is only called by DataTable::GetEmptyTupleSlot().
   oid_t GetNextEmptyTupleSlot() {
-    oid_t tuple_slot_id =
-        next_tuple_slot.fetch_add(1, std::memory_order_relaxed);
+    oid_t tuple_slot_id = next_tuple_slot.fetch_add(1, std::memory_order_relaxed);
 
     if (tuple_slot_id >= num_tuple_slots) {
       return INVALID_OID;
@@ -89,7 +86,7 @@ class TileGroupHeader : public Printable {
   /**
    * Used by logging
    */
-  // TODO: rewrite the code!!!
+   // TODO: rewrite the code!!!
   bool GetEmptyTupleSlot(const oid_t &tuple_slot_id) {
     tile_header_lock.Lock();
     if (tuple_slot_id < num_tuple_slots) {
@@ -104,15 +101,9 @@ class TileGroupHeader : public Printable {
     }
   }
 
-  oid_t GetCurrentNextTupleSlot() const {
-    // Carefully check if the next_tuple_slot is out of boundary
-    oid_t next_tid = next_tuple_slot;
-    if (next_tid < num_tuple_slots) {
-      return next_tid;
-    } else {
-      return num_tuple_slots;
-    }
-  }
+  oid_t GetNextTupleSlot() const { return next_tuple_slot; }
+
+  //oid_t GetActiveTupleCount(const txn_id_t &txn_id);
 
   oid_t GetActiveTupleCount();
 
@@ -127,8 +118,8 @@ class TileGroupHeader : public Printable {
   // but the current transaction reads the txn_id.
   // the returned value seems to be uncertain.
   inline txn_id_t GetTransactionId(const oid_t &tuple_slot_id) const {
-    // txn_id_t *txn_id_ptr = (txn_id_t *)(TUPLE_HEADER_LOCATION);
-    // return __atomic_load_n(txn_id_ptr, __ATOMIC_RELAXED);
+    //txn_id_t *txn_id_ptr = (txn_id_t *)(TUPLE_HEADER_LOCATION);
+    //return __atomic_load_n(txn_id_ptr, __ATOMIC_RELAXED);
     return *((txn_id_t *)(TUPLE_HEADER_LOCATION));
   }
 
@@ -149,7 +140,7 @@ class TileGroupHeader : public Printable {
   }
 
   // constraint: at most 24 bytes.
-  inline char *GetReservedFieldRef(const oid_t &tuple_slot_id) const {
+  inline char* GetReservedFieldRef(const oid_t &tuple_slot_id) const {
     return (char *)(TUPLE_HEADER_LOCATION + reserved_field_offset);
   }
 
@@ -162,10 +153,6 @@ class TileGroupHeader : public Printable {
   }
 
   // Setters
-
-  inline void SetTileGroup(TileGroup *tile_group) {
-    this->tile_group = tile_group;
-  }
   inline void SetTransactionId(const oid_t &tuple_slot_id,
                                const txn_id_t &transaction_id) {
     *((txn_id_t *)(TUPLE_HEADER_LOCATION)) = transaction_id;
@@ -206,18 +193,15 @@ class TileGroupHeader : public Printable {
     return ((txn_id_t *)(TUPLE_HEADER_LOCATION));
   }
 
-  inline txn_id_t SetAtomicTransactionId(const oid_t &tuple_slot_id,
-                                         const txn_id_t &old_txn_id,
-                                         const txn_id_t &new_txn_id) const {
+  inline txn_id_t SetAtomicTransactionId(const oid_t &tuple_slot_id, const txn_id_t &old_txn_id, const txn_id_t &new_txn_id) const {
     txn_id_t *txn_id_ptr = (txn_id_t *)(TUPLE_HEADER_LOCATION);
     return __sync_val_compare_and_swap(txn_id_ptr, old_txn_id, new_txn_id);
   }
 
   inline bool SetAtomicTransactionId(const oid_t &tuple_slot_id,
-                                     const txn_id_t &transaction_id) const {
+                            const txn_id_t &transaction_id) const {
     txn_id_t *txn_id_ptr = (txn_id_t *)(TUPLE_HEADER_LOCATION);
-    return __sync_bool_compare_and_swap(txn_id_ptr, INITIAL_TXN_ID,
-                                        transaction_id);
+    return __sync_bool_compare_and_swap(txn_id_ptr, INITIAL_TXN_ID, transaction_id);
   }
 
   void PrintVisibility(txn_id_t txn_id, cid_t at_cid);
@@ -232,31 +216,24 @@ class TileGroupHeader : public Printable {
   // Get a string representation for debugging
   const std::string GetInfo() const;
 
-  static inline size_t GetReserverdSize() {return  reserverd_size;}
-  // *
-  // -----------------------------------------------------------------------------
-  // *  | TxnID (8 bytes)  | BeginTimeStamp (8 bytes) | EndTimeStamp (8 bytes) |
-  // *  | NextItemPointer (8 bytes) | PrevItemPointer (8 bytes) |
-  // ReservedField (24 bytes)
-  // *  | InsertCommit (1 byte) | DeleteCommit (1 byte)
-  // *
-  // -----------------------------------------------------------------------------
+ // *  -----------------------------------------------------------------------------
+ // *  | TxnID (8 bytes)  | BeginTimeStamp (8 bytes) | EndTimeStamp (8 bytes) |
+ // *  | NextItemPointer (16 bytes) | PrevItemPointer (16 bytes) | ReservedField (24 bytes)
+ // *  | InsertCommit (1 byte) | DeleteCommit (1 byte)
+ // *  -----------------------------------------------------------------------------
 
  private:
   // header entry size is the size of the layout described above
-  static const size_t reserverd_size = 24;
-  static const size_t header_entry_size =
-      sizeof(txn_id_t) + 2 * sizeof(cid_t) + 2 * sizeof(ItemPointer) + reserverd_size +
-      2 * sizeof(bool);
+  static const size_t header_entry_size = sizeof(txn_id_t) + 2 * sizeof(cid_t) +
+                                          2 * sizeof(ItemPointer) + 24 +
+                                          2 * sizeof(bool);
   static const size_t txn_id_offset = 0;
   static const size_t begin_cid_offset = sizeof(txn_id_t);
   static const size_t end_cid_offset = begin_cid_offset + sizeof(cid_t);
   static const size_t next_pointer_offset = end_cid_offset + sizeof(cid_t);
-  static const size_t prev_pointer_offset =
-      next_pointer_offset + sizeof(ItemPointer);
-  static const size_t reserved_field_offset =
-      prev_pointer_offset + sizeof(ItemPointer);
-  static const size_t insert_commit_offset = reserved_field_offset + reserverd_size;
+  static const size_t prev_pointer_offset = next_pointer_offset + sizeof(ItemPointer);
+  static const size_t reserved_field_offset = prev_pointer_offset + sizeof(ItemPointer);
+  static const size_t insert_commit_offset = reserved_field_offset + 24;
   static const size_t delete_commit_offset =
       insert_commit_offset + sizeof(bool);
 
@@ -267,9 +244,6 @@ class TileGroupHeader : public Printable {
   // Backend
   BackendType backend_type;
 
-  // Associated tile_group
-  TileGroup *tile_group;
-
   size_t header_size;
 
   // set of fixed-length tuple slots
@@ -279,10 +253,9 @@ class TileGroupHeader : public Printable {
   oid_t num_tuple_slots;
 
   // next free tuple slot
-  // WARNING: this variable may not be the right boundary of the tile
-  // IT MAY OUT OF BOUNDARY! ALWAYS CHECK IF IT EXCEEDS num_tuple_slots
   std::atomic<oid_t> next_tuple_slot;
 
+  // synch helpers
   Spinlock tile_header_lock;
 };
 

@@ -22,11 +22,8 @@
 namespace peloton {
 namespace concurrency {
 
-void Transaction::RecordRead(const ItemPointer &location) {
-
-  oid_t tile_group_id = location.block;
-  oid_t tuple_id = location.offset;
-
+void Transaction::RecordRead(const oid_t &tile_group_id,
+                             const oid_t &tuple_id) {
   if (rw_set_.find(tile_group_id) != rw_set_.end() &&
       rw_set_.at(tile_group_id).find(tuple_id) !=
           rw_set_.at(tile_group_id).end()) {
@@ -38,11 +35,8 @@ void Transaction::RecordRead(const ItemPointer &location) {
   }
 }
 
-void Transaction::RecordUpdate(const ItemPointer &location) {
-
-  oid_t tile_group_id = location.block;
-  oid_t tuple_id = location.offset;
-
+void Transaction::RecordUpdate(const oid_t &tile_group_id,
+                               const oid_t &tuple_id) {
   if (rw_set_.find(tile_group_id) != rw_set_.end() &&
       rw_set_.at(tile_group_id).find(tuple_id) !=
           rw_set_.at(tile_group_id).end()) {
@@ -69,11 +63,8 @@ void Transaction::RecordUpdate(const ItemPointer &location) {
   }
 }
 
-void Transaction::RecordInsert(const ItemPointer &location) {
-
-  oid_t tile_group_id = location.block;
-  oid_t tuple_id = location.offset;
-
+void Transaction::RecordInsert(const oid_t &tile_group_id,
+                               const oid_t &tuple_id) {
   if (rw_set_.find(tile_group_id) != rw_set_.end() &&
       rw_set_.at(tile_group_id).find(tuple_id) !=
           rw_set_.at(tile_group_id).end()) {
@@ -85,11 +76,8 @@ void Transaction::RecordInsert(const ItemPointer &location) {
   }
 }
 
-void Transaction::RecordDelete(const ItemPointer &location) {
-
-  oid_t tile_group_id = location.block;
-  oid_t tuple_id = location.offset;
-
+void Transaction::RecordDelete(const oid_t &tile_group_id,
+                               const oid_t &tuple_id) {
   if (rw_set_.find(tile_group_id) != rw_set_.end() &&
       rw_set_.at(tile_group_id).find(tuple_id) !=
           rw_set_.at(tile_group_id).end()) {
@@ -117,6 +105,22 @@ void Transaction::RecordDelete(const ItemPointer &location) {
   } else {
     assert(false);
   }
+}
+
+void Transaction::RecordRead(const ItemPointer &location) {
+  RecordRead(location.block, location.offset);
+}
+
+void Transaction::RecordUpdate(const ItemPointer &location) {
+  RecordUpdate(location.block, location.offset);
+}
+
+void Transaction::RecordInsert(const ItemPointer &location) {
+  RecordInsert(location.block, location.offset);
+}
+
+void Transaction::RecordDelete(const ItemPointer &location) {
+  RecordDelete(location.block, location.offset);
 }
 
 const std::map<oid_t, std::map<oid_t, RWType>> &Transaction::GetRWSet() {

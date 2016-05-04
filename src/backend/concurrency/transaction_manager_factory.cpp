@@ -1,12 +1,12 @@
 //===----------------------------------------------------------------------===//
 //
-//                         Peloton
+//                         PelotonDB
 //
-// transaction_manager_factory.h
+// transaction_manager_factory.cpp
 //
-// Identification: src/backend/concurrency/transaction_manager_factory.h
+// Identification: src/backend/concurrency/transaction_manager_factory.cpp
 //
-// Copyright (c) 2015-16, Carnegie Mellon University Database Group
+// Copyright (c) 2015, Carnegie Mellon University Database Group
 //
 //===----------------------------------------------------------------------===//
 

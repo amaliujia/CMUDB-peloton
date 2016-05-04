@@ -44,24 +44,11 @@ class configuration {
   // update ratio
   double update_ratio;
 
-  // execution duration
-  double duration;
-
-  // snapshot duration
-  double snapshot_duration;
-
+  // # of times to run operator
   unsigned long transaction_count;
 
   // number of backends
   int backend_count;
-
-  std::vector<double> snapshot_throughput;
-
-  std::vector<double> snapshot_abort_rate;
-
-  double throughput;
-
-  double abort_rate;
 
 };
 
@@ -77,9 +64,7 @@ void ValidateUpdateRatio(const configuration &state);
 
 void ValidateBackendCount(const configuration &state);
 
-void ValidateDuration(const configuration &state);
-
-void ValidateSnapshotDuration(const configuration &state);
+void ValidateTransactionCount(const configuration &state);
 
 void ParseArguments(int argc, char *argv[], configuration &state);
 

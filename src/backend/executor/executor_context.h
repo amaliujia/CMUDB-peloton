@@ -23,13 +23,6 @@ namespace executor {
 // Executor Context
 //===--------------------------------------------------------------------===//
 
-// TODO: We might move this flag into the types.h in the future
-enum ParamsExecFlag {
-  INVALID,
-  IN_NESTLOOP = 1 // nestloop (in+indexscan)
-  //IN_**         // other types
-};
-
 class ExecutorContext {
  public:
   ExecutorContext(const ExecutorContext &) = delete;
@@ -47,10 +40,10 @@ class ExecutorContext {
   concurrency::Transaction *GetTransaction() const { return transaction_; }
 
   const std::vector<Value> &GetParams() const { return params_; }
-  uint32_t GetParamsExecFlag() { return params_exec_flag_; }
+  uint32_t GetParamsExec() { return params_exec_; }
 
   void SetParams(Value value) { params_.push_back(value); }
-  void SetParamsExecFlag(ParamsExecFlag flag) { params_exec_flag_ = flag; }
+  void SetParamsExec(uint32_t flag) { params_exec_ = flag; }
   void ClearParams() { params_.clear(); }
 
   // Get a varlen pool (will construct the pool only if needed)
@@ -74,7 +67,12 @@ class ExecutorContext {
   std::unique_ptr<VarlenPool> pool_;
 
   // PARAMS_EXEC_Flag
-  ParamsExecFlag params_exec_flag_ ;
+  /*
+   * 1 IN: nestloop+indexscan
+   * 2 unknown yet
+   * 3 unknown yet
+   */
+  uint32_t params_exec_ = 0;  // 1 IN: nestloop+indexscan
 };
 
 }  // namespace executor

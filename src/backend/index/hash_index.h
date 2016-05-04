@@ -2,9 +2,9 @@
 //
 //                         Peloton
 //
-// bwtree_index.h
+// hash_index.h
 //
-// Identification: src/backend/index/bwtree_index.h
+// Identification: src/backend/index/hash_index.h
 //
 // Copyright (c) 2015-16, Carnegie Mellon University Database Group
 //
@@ -14,34 +14,35 @@
 
 #include <vector>
 #include <string>
-#include <map>
 
 #include "backend/catalog/manager.h"
 #include "backend/common/platform.h"
 #include "backend/common/types.h"
 #include "backend/index/index.h"
 
-#include "backend/index/bwtree.h"
+#include "libcuckoo/cuckoohash_map.hh"
 
 namespace peloton {
 namespace index {
 
 /**
- * BW tree-based index implementation.
+ * Using libcuckoo for hash index
  *
  * @see Index
  */
-template <typename KeyType, typename ValueType, typename KeyComparator,
-          typename KeyEqualityChecker>
-class BWTreeIndex : public Index {
+template <typename KeyType, typename ValueType, class KeyHasher,
+          class KeyComparator, class KeyEqualityChecker>
+class HashIndex : public Index {
   friend class IndexFactory;
 
-  typedef BWTree<KeyType, ValueType, KeyComparator, KeyEqualityChecker> MapType;
+  // Define the container type
+  typedef cuckoohash_map<KeyType, std::vector<ValueType>, KeyHasher,
+                         KeyEqualityChecker> Table;
 
  public:
-  BWTreeIndex(IndexMetadata *metadata);
+  HashIndex(IndexMetadata *metadata);
 
-  ~BWTreeIndex();
+  ~HashIndex();
 
   bool InsertEntry(const storage::Tuple *key, ItemPointer &location);
 
@@ -52,7 +53,6 @@ class BWTreeIndex : public Index {
                               const ItemPointer &location __attribute__((unused)),
                               std::function<bool(const storage::Tuple *, const ItemPointer &)> predicate __attribute__((unused)))
                               {return true;}
-
 
   std::vector<ItemPointer> Scan(const std::vector<Value> &values,
                                 const std::vector<oid_t> &key_column_ids,
@@ -65,22 +65,20 @@ class BWTreeIndex : public Index {
 
   std::string GetTypeName() const;
 
-  // TODO: Implement this
   bool Cleanup() { return true; }
 
-  // TODO: Implement this
-  size_t GetMemoryFootprint() { return 0; }
+  size_t GetMemoryFootprint() {
+    // TODO: implement it
+    return 0;
+  }
 
  protected:
-  // container
-  MapType container;
+  Table container;
 
   // equality checker and comparator
+  KeyHasher hasher;
   KeyEqualityChecker equals;
   KeyComparator comparator;
-
-  // synch helper
-  RWLock index_lock;
 };
 
 }  // End index namespace
