@@ -107,8 +107,7 @@ const planner::AbstractPlan *PlanTransformer::BuildParallelPlan(
     std::vector<planner::AbstractPlan *> child_plan_vec;
 
     for (const auto&child : old_plan->GetChildren()) {
-      const planner::AbstractPlan *child_ptr = PlanTransformer::GetInstance().BuildParallelPlan(child.get());
-      child_plan_vec.push_back((planner::AbstractPlan *const &) child_ptr);
+      child_plan_vec.push_back(BuildParallelPlanUtil(child.get()));
     }
 
     ret_ptr = BuildParallelPlanUtil(old_plan);
