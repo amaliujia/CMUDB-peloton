@@ -32,6 +32,10 @@
 #include "backend/bridge/dml/executor/plan_executor.h"
 #include "backend/bridge/dml/mapper/mapper.h"
 #include "backend/logging/log_manager.h"
+<<<<<<< HEAD
+=======
+#include "backend/gc/gc_manager_factory.h"
+>>>>>>> parent of d322d58... Merge pull request #130 from Michael-Tieying-Zhang/master
 
 #include "postgres.h"
 #include "c.h"

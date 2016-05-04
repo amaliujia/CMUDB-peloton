@@ -211,7 +211,15 @@ local.properties
 
 # Code Recommenders
 .recommenders/
+<<<<<<< HEAD
 
 CMakeLists.txt
 
+=======
+<<<<<<< HEAD
+
+CMakeLists.txt
+=======
+>>>>>>> parent of d322d58... Merge pull request #130 from Michael-Tieying-Zhang/master
 io_file
+>>>>>>> wbl
