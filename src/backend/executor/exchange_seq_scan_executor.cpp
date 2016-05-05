@@ -27,7 +27,7 @@ bool ExchangeSeqScanExecutor::DInit() {
   if (!status) return false;
 
   // Grab data from plan node.
-  const planner::ExchangeSeqScanPlan &node = GetPlanNode<planner::ExchangeSeqScanPlan>();
+  const planner::SeqScanPlan &node = GetPlanNode<planner::SeqScanPlan>();
 
   target_table_ = node.GetTable();
 
@@ -116,13 +116,6 @@ bool ExchangeSeqScanExecutor::DExecute() {
       return true;
     } else if (response_ptr->GetStatus() == NoRetValue) {
       continue;
-    } else if (response_ptr->GetStatus() == Abort) {
-      // need to wait for all tasks and return task.
-
-      while (current_tile_group_offset_ < table_tile_group_count_) {
-        queue_.Get();
-        current_tile_group_offset_++;
-      }
     }
   }
   return false;
@@ -154,13 +147,6 @@ void ExchangeSeqScanExecutor::ThreadExecute(oid_t assigned_tile_group_offset) {
       // if the tuple is visible, then perform predicate evaluation.
       if (predicate_ == nullptr) {
         position_list.push_back(tuple_id);
-        auto res = transaction_manager.PerformRead(tile_group->GetTileGroupId(),
-                                                   tuple_id);
-        if (!res) {
-          transaction_manager.SetTransactionResult(RESULT_FAILURE);
-          seq_failure = true;
-          break;
-        }
       } else {
         expression::ContainerTuple<storage::TileGroup> tuple(tile_group.get(),
                                                              tuple_id);
@@ -168,13 +154,6 @@ void ExchangeSeqScanExecutor::ThreadExecute(oid_t assigned_tile_group_offset) {
           predicate_->Evaluate(&tuple, nullptr, executor_context_).IsTrue();
         if (eval == true) {
           position_list.push_back(tuple_id);
-          auto res = transaction_manager.PerformRead(
-            tile_group->GetTileGroupId(), tuple_id);
-          if (!res) {
-            transaction_manager.SetTransactionResult(RESULT_FAILURE);
-            seq_failure = true;
-            break;
-          }
         }
       }
     }
