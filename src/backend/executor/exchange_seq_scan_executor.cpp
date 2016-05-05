@@ -126,8 +126,6 @@ void ExchangeSeqScanExecutor::ThreadExecute(oid_t assigned_tile_group_offset) {
     "Parallel worker :: executor: %s with assigned tile group offset %lu" ,
     GetRawNode()->GetInfo().c_str(), assigned_tile_group_offset);
 
-  bool seq_failure = false;
-
   auto &transaction_manager =
     concurrency::TransactionManagerFactory::GetInstance();
   concurrency::current_txn = this->executor_context_->GetTransaction();
@@ -161,12 +159,9 @@ void ExchangeSeqScanExecutor::ThreadExecute(oid_t assigned_tile_group_offset) {
 
   AbstractParallelTaskResponse *response = nullptr;
 
-  if (seq_failure) {
-    response = new ParallelSeqScanTaskResponse(Abort);
-  } else {
-    if (position_list.size() == 0) {
+  if (position_list.size() == 0) {
       response = new ParallelSeqScanTaskResponse(NoRetValue);
-    } else {
+  } else {
       // Construct logical tile.
       std::unique_ptr<LogicalTile> logical_tile(LogicalTileFactory::GetTile());
       logical_tile->AddColumns(tile_group, column_ids_);
@@ -174,7 +169,6 @@ void ExchangeSeqScanExecutor::ThreadExecute(oid_t assigned_tile_group_offset) {
 
       response =
         new ParallelSeqScanTaskResponse(HasRetValue, logical_tile.release());
-    }
   }
 
   queue_.Put(response);
