@@ -12,8 +12,8 @@
 #include "backend/executor/logical_tile_factory.h"
 
 #include "backend/executor/hash_join_executor.h"
+#include "backend/executor/exchange_hash_join_executor.h"
 #include "backend/executor/hash_executor.h"
-#include "backend/executor/parallel_hash_executor.h"
 #include "backend/executor/merge_join_executor.h"
 #include "backend/executor/nested_loop_join_executor.h"
 
@@ -43,7 +43,7 @@ using ::testing::InSequence;
 namespace peloton {
 namespace test {
 
-class ParallelHashExecutorTests: public PelotonTest { };
+class ExchangeHashExecutorTests: public PelotonTest { };
 
 /*
  * create a table with tile_group_num tiles, each of which has row_num rows.
@@ -168,7 +168,7 @@ void ExpectNormalTileResults(
   }
 }
 
-TEST_F(ParallelHashExecutorTests, CorrectnessTest) {
+TEST_F(ExchangeHashExecutorTests, CorrectnessTest) {
   constexpr size_t tile_num = 300;
   constexpr size_t row_num = 1000;
 
@@ -259,7 +259,7 @@ TEST_F(ParallelHashExecutorTests, CorrectnessTest) {
   planner::HashPlan hash_plan_node2(hash_keys2);
 
   // Construct the hash executor
-  executor::ParallelHashExecutor parallel_hash_executor(&hash_plan_node2, nullptr);
+  executor::ExchangeHashExecutor parallel_hash_executor(&hash_plan_node2, nullptr);
   parallel_hash_executor.AddChild(&right_table_scan_executor2);
 
   EXPECT_TRUE(parallel_hash_executor.Init());
@@ -277,7 +277,7 @@ TEST_F(ParallelHashExecutorTests, CorrectnessTest) {
   {
     for(const auto &iter1: hash_table) {
       EXPECT_TRUE(hash_table2.contains(iter1.first));
-      executor::ParallelHashExecutor::MapValueType set;
+      executor::ExchangeHashExecutor::MapValueType set;
       bool found = hash_table2.find(iter1.first, set);
       EXPECT_TRUE(found);
       for(const auto &iter12: iter1.second) {
@@ -293,7 +293,7 @@ TEST_F(ParallelHashExecutorTests, CorrectnessTest) {
   }
 }
 
-TEST_F(ParallelHashExecutorTests, SpeedTest) {
+TEST_F(ExchangeHashExecutorTests, SpeedTest) {
   constexpr size_t tile_num = 3000;
   constexpr size_t row_num = 10000;
 
@@ -393,7 +393,7 @@ TEST_F(ParallelHashExecutorTests, SpeedTest) {
     planner::HashPlan hash_plan_node(hash_keys);
 
     // Construct the hash executor
-    executor::ParallelHashExecutor hash_executor(&hash_plan_node, nullptr);
+    executor::ExchangeHashExecutor hash_executor(&hash_plan_node, nullptr);
     hash_executor.AddChild(&right_table_scan_executor);
 
     const auto start = std::chrono::system_clock::now();
@@ -402,7 +402,7 @@ TEST_F(ParallelHashExecutorTests, SpeedTest) {
     const auto end = std::chrono::system_clock::now();
     const std::chrono::duration<double> diff = end-start;
     const double ms = diff.count()*1000;
-    LOG_INFO("ParallelHashExecutor execution time: %lf ms", ms);
+    LOG_INFO("ExchangeHashExecutor execution time: %lf ms", ms);
   }
 }
 }

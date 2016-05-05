@@ -23,7 +23,7 @@
 #include "backend/executor/logical_tile.h"
 #include "backend/executor/logical_tile_factory.h"
 #include "backend/executor/seq_scan_executor.h"
-#include "backend/executor/parallel_scan_executor.h"
+#include "backend/executor/exchange_seq_scan_executor.h"
 #include "backend/expression/abstract_expression.h"
 #include "backend/expression/expression_util.h"
 #include "backend/planner/seq_scan_plan.h"
@@ -203,14 +203,13 @@ expression::AbstractExpression *CreatePredicate(
   return predicate;
 }
 
-double GetRunTime(executor::ParallelScanExecutor &executor, std::vector<executor::LogicalTile *> *result) {
+double GetRunTime(executor::ExchangeSeqScanExecutor &executor, std::vector<executor::LogicalTile *> *result) {
   const auto start = std::chrono::system_clock::now();
   EXPECT_TRUE(executor.Init());
   EXPECT_TRUE(executor.Execute());
   while(executor.Execute()) {
-    std::vector<executor::LogicalTile *> temp = executor.GetOutputs();
-    if(result)
-      result->insert(result->end(), temp.begin(), temp.end());
+    executor::LogicalTile * temp = executor.GetOutput();
+    result->push_back(temp);
   }
   const auto end = std::chrono::system_clock::now();
   const std::chrono::duration<double> diff = end-start;
@@ -248,7 +247,7 @@ TEST_F(ParallelSeqScanTests, LeafNodeCorrectnessTest) {
   std::unique_ptr<executor::ExecutorContext> context(
           new executor::ExecutorContext(txn));
 
-  executor::ParallelScanExecutor executor(&node, context.get());
+  executor::ExchangeSeqScanExecutor executor(&node, context.get());
   //executor::SeqScanExecutor executor(&node, context.get());
   std::vector<executor::LogicalTile *> result;
   GetRunTime(executor, &result);
@@ -339,7 +338,7 @@ TEST_F(ParallelSeqScanTests, LeafNodeSpeedTest) {
     auto txn = txn_manager.BeginTransaction();
     std::unique_ptr<executor::ExecutorContext> context(
             new executor::ExecutorContext(txn));
-    executor::ParallelScanExecutor executor(&node, context.get());
+    executor::ExchangeSeqScanExecutor executor(&node, context.get());
     std::vector<executor::LogicalTile *> result;
     double duration1 = GetRunTime(executor, &result);
     txn_manager.CommitTransaction();
