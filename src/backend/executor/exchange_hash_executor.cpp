@@ -106,7 +106,7 @@ bool ExchangeHashExecutor::DExecute() {
     size_t child_tile_iter = 0;
     while (child_tile_iter < child_tiles_.size()) {
       std::function<void()> f_build_hash_table = std::bind(&ExchangeHashExecutor::BuildHashTableThreadMain, this,
-                                                           child_tiles_[child_tile_iter].release(), child_tile_iter);
+                                                           child_tiles_[child_tile_iter].get(), child_tile_iter);
       ThreadManager::GetInstance().AddTask(f_build_hash_table);
       child_tile_iter++;
 
