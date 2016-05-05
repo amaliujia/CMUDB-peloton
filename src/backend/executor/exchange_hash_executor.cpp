@@ -68,8 +68,7 @@ void ExchangeHashExecutor::BuildHashTableThreadMain(LogicalTile *tile, size_t ch
     }
   }
 
-  auto response = new ParallelSeqScanTaskResponse(NoRetValue, nullptr);
-  queue_.Put(response);
+  barrier.Notify();
 }
 
 /*
@@ -98,14 +97,19 @@ bool ExchangeHashExecutor::DExecute() {
     }
 
     // First, get all the input logical tiles
-    size_t child_tile_iter = 0;
     while (children_[0]->Execute()) {
       auto tile = children_[0]->GetOutput();
       child_tiles_.emplace_back(tile);
+    }
+
+    barrier = Barrier(child_tiles_.size());
+    size_t child_tile_iter = 0;
+    while (child_tile_iter < child_tiles_.size()) {
       std::function<void()> f_build_hash_table = std::bind(&ExchangeHashExecutor::BuildHashTableThreadMain, this,
-                                                           tile, child_tile_iter);
-      child_tile_iter++;
+                                                           child_tiles_[child_tile_iter].release(), child_tile_iter);
       ThreadManager::GetInstance().AddTask(f_build_hash_table);
+      child_tile_iter++;
+
     }
 
     if (child_tiles_.size() == 0) {
@@ -115,11 +119,7 @@ bool ExchangeHashExecutor::DExecute() {
     done_ = true;
 
     // make sure building hashmap is done before return any child tiles.
-    size_t task_count = 0;
-    while (task_count < child_tiles_.size()) {
-      std::unique_ptr<AbstractParallelTaskResponse>(queue_.Get());
-      task_count++;
-    }
+    barrier.Wait();
   }
 
   // Return logical tiles one at a time
