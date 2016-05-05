@@ -19,7 +19,9 @@ check_PROGRAMS += \
 				  projection_test \
 				  tile_group_layout_test \
 				  loader_test			\
-				  exchange_hash_join_test
+				  exchange_hash_join_test  \
+				  parallel_seq_scan_test \
+                  parallel_hash_test
 
 executor_tests_common= 	executor/executor_tests_util.cpp \
 						harness.cpp
@@ -85,3 +87,11 @@ exchange_hash_join_test_SOURCES = \
 					$(executor_tests_common) \
 						executor/exchange_hash_join_test.cpp \
 						executor/join_tests_util.cpp
+
+parallel_seq_scan_test_SOURCES = \
+                    $(executor_tests_common) \
+                    executor/parallel_seq_scan_test.cpp
+
+parallel_hash_test_SOURCES = \
+                    $(executor_tests_common) \
+                    executor/parallel_hash_test.cpp
