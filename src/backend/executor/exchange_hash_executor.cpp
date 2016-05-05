@@ -79,7 +79,7 @@ void ExchangeHashExecutor::BuildHashTableThreadMain(LogicalTile *tile, size_t ch
 bool ExchangeHashExecutor::DExecute() {
   LOG_INFO("Exchange Hash Executor");
   if (done_ == false) {
-    const planner::ExchangeHashPlan& node = GetPlanNode<planner::ExchangeHashPlan>();
+    const planner::HashPlan& node = GetPlanNode<planner::HashPlan>();
 
     /* *
     * HashKeys is a vector of TupleValue expr
@@ -118,6 +118,7 @@ bool ExchangeHashExecutor::DExecute() {
     size_t task_count = 0;
     while (task_count < child_tiles_.size()) {
       std::unique_ptr<AbstractParallelTaskResponse>(queue_.Get());
+      // queue_.Get();
       task_count++;
     }
   }

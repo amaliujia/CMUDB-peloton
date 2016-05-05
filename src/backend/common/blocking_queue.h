@@ -13,13 +13,13 @@ namespace peloton {
 template <typename T>
 class BlockingQueue {
 public:
-    T Get() {
+    T& Get() {
       std::unique_lock<std::mutex> locker(lock_);
       while (storage_.size() == 0) {
         cond_.wait(locker);
       }
 
-      T item = storage_.front();
+      T& item = storage_.front();
       storage_.erase(storage_.begin());
       locker.unlock();
       return item;
