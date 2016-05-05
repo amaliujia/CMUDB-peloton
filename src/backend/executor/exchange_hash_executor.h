@@ -8,6 +8,7 @@
 #include <unordered_set>
 
 #include "backend/common/types.h"
+#include "backend/common/barrier.h"
 #include "libcuckoo/cuckoohash_map.hh"
 #include "backend/executor/abstract_exchange_executor.h"
 #include "backend/executor/logical_tile.h"
@@ -72,6 +73,8 @@ private:
   bool done_ = false;
 
   size_t result_itr = 0;
+
+  Barrier *barrier = nullptr;
 };
 
 
