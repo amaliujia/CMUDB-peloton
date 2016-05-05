@@ -206,10 +206,10 @@ expression::AbstractExpression *CreatePredicate(
 double GetRunTime(executor::ExchangeSeqScanExecutor &executor, std::vector<executor::LogicalTile *> *result) {
   const auto start = std::chrono::system_clock::now();
   EXPECT_TRUE(executor.Init());
-  EXPECT_TRUE(executor.Execute());
   while(executor.Execute()) {
     executor::LogicalTile * temp = executor.GetOutput();
-    result->push_back(temp);
+    if(result)
+      result->push_back(temp);
   }
   const auto end = std::chrono::system_clock::now();
   const std::chrono::duration<double> diff = end-start;
