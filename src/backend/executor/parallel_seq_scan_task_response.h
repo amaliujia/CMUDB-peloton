@@ -20,7 +20,7 @@ class ParallelSeqScanTaskResponse : public AbstractParallelTaskResponse {
   LogicalTile *GetOutput();
 
  private:
-  std::unique_ptr<LogicalTile> logicalTile_;
+  LogicalTile *logicalTile_;
 };
 
 }  // executor

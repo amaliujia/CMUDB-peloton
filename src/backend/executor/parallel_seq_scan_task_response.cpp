@@ -16,7 +16,7 @@ ParallelSeqScanTaskResponse::ParallelSeqScanTaskResponse(
     : AbstractParallelTaskResponse(status), logicalTile_(logicalTile) {}
 
 LogicalTile *ParallelSeqScanTaskResponse::GetOutput() {
-  return logicalTile_.release();
+  return logicalTile_;
 }
 
 }  // executor
