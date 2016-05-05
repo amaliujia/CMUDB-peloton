@@ -109,7 +109,7 @@ bool ExchangeSeqScanExecutor::DExecute() {
   }
 
   while (current_tile_group_offset_ < table_tile_group_count_) {
-    std::unique_ptr<AbstractParallelTaskResponse> response_ptr(queue_.Get());
+    std::unique_ptr<AbstractParallelTaskResponse> response_ptr(queue_.Get().release());
     current_tile_group_offset_++;
     if (response_ptr->GetStatus() == HasRetValue) {
       SetOutput(response_ptr->GetOutput());
