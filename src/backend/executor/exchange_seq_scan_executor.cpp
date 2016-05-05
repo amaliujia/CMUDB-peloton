@@ -177,7 +177,7 @@ void ExchangeSeqScanExecutor::ThreadExecute(oid_t assigned_tile_group_offset) {
     }
   }
 
-  queue_.Put(response);
+  queue_.Put(std::unique_ptr<AbstractParallelTaskResponse>(response));
 }
 
 }  // executor

@@ -69,7 +69,7 @@ void ExchangeHashExecutor::BuildHashTableThreadMain(LogicalTile *tile, size_t ch
   }
 
   auto response = new ParallelSeqScanTaskResponse(NoRetValue, nullptr);
-  queue_.Put(response);
+  queue_.Put(std::unique_ptr<AbstractParallelTaskResponse>(response));
 }
 
 /*
