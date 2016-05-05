@@ -22,7 +22,7 @@ class AbstractExchangeExecutor {
   explicit AbstractExchangeExecutor();
 
  protected:
-  peloton::BlockingQueue<std::unique_ptr<AbstractParallelTaskResponse>> queue_;
+  peloton::BlockingQueue<AbstractParallelTaskResponse *> queue_;
 };
 
 }  // namespace executor

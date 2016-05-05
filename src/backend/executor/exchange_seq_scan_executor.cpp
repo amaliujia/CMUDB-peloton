@@ -109,7 +109,7 @@ bool ExchangeSeqScanExecutor::DExecute() {
   }
 
   while (current_tile_group_offset_ < table_tile_group_count_) {
-    std::unique_ptr<AbstractParallelTaskResponse> response_ptr(queue_.Get().release());
+    std::unique_ptr<AbstractParallelTaskResponse> response_ptr(queue_.Get());
     current_tile_group_offset_++;
     if (response_ptr->GetStatus() == HasRetValue) {
       SetOutput(response_ptr->GetOutput());
@@ -177,7 +177,7 @@ void ExchangeSeqScanExecutor::ThreadExecute(oid_t assigned_tile_group_offset) {
     }
   }
 
-  queue_.Put(std::unique_ptr<AbstractParallelTaskResponse>(response));
+  queue_.Put(response);
 }
 
 }  // executor

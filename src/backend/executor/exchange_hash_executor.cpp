@@ -69,7 +69,7 @@ void ExchangeHashExecutor::BuildHashTableThreadMain(LogicalTile *tile, size_t ch
   }
 
   auto response = new ParallelSeqScanTaskResponse(NoRetValue, nullptr);
-  queue_.Put(std::unique_ptr<AbstractParallelTaskResponse>(response));
+  queue_.Put(response);
 }
 
 /*
@@ -117,7 +117,7 @@ bool ExchangeHashExecutor::DExecute() {
     // make sure building hashmap is done before return any child tiles.
     size_t task_count = 0;
     while (task_count < child_tiles_.size()) {
-      queue_.Get();
+      std::unique_ptr<AbstractParallelTaskResponse>(queue_.Get());
       task_count++;
     }
   }
