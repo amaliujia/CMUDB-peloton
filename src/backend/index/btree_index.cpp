@@ -160,7 +160,9 @@ void BTreeIndex<KeyType, ValueType, KeyComparator, KeyEqualityChecker>::Scan(
   bool special_case = false;
   if (key_column_ids_itr != key_column_ids.end()) {
     auto offset = std::distance(key_column_ids.begin(), key_column_ids_itr);
-    if (expr_types[offset] == EXPRESSION_TYPE_COMPARE_EQUAL) {
+    if (expr_types[offset] == EXPRESSION_TYPE_COMPARE_EQUAL ||
+        expr_types[offset] == EXPRESSION_TYPE_COMPARE_GREATERTHANOREQUALTO ||
+        expr_types[offset] == EXPRESSION_TYPE_COMPARE_GREATERTHAN) {
       special_case = true;
     }
   }
@@ -182,8 +184,6 @@ void BTreeIndex<KeyType, ValueType, KeyComparator, KeyEqualityChecker>::Scan(
       all_constraints_are_equal = ConstructLowerBoundTuple(
           start_key.get(), values, key_column_ids, expr_types);
       LOG_TRACE("All constraints are equal : %d ", all_constraints_are_equal);
-      index_key.SetFromKey(start_key.get());
-
       index_key.SetFromKey(start_key.get());
 
       // Set scan begin iterator
@@ -297,7 +297,9 @@ void BTreeIndex<KeyType, ValueType, KeyComparator, KeyEqualityChecker>::Scan(
   bool special_case = false;
   if (key_column_ids_itr != key_column_ids.end()) {
     auto offset = std::distance(key_column_ids.begin(), key_column_ids_itr);
-    if (expr_types[offset] == EXPRESSION_TYPE_COMPARE_EQUAL) {
+    if (expr_types[offset] == EXPRESSION_TYPE_COMPARE_EQUAL ||
+        expr_types[offset] == EXPRESSION_TYPE_COMPARE_GREATERTHANOREQUALTO ||
+        expr_types[offset] == EXPRESSION_TYPE_COMPARE_GREATERTHAN) {
       special_case = true;
     }
   }
@@ -319,8 +321,6 @@ void BTreeIndex<KeyType, ValueType, KeyComparator, KeyEqualityChecker>::Scan(
       all_constraints_are_equal = ConstructLowerBoundTuple(
           start_key.get(), values, key_column_ids, expr_types);
       LOG_TRACE("All constraints are equal : %d ", all_constraints_are_equal);
-      index_key.SetFromKey(start_key.get());
-
       index_key.SetFromKey(start_key.get());
 
       // Set scan begin iterator
