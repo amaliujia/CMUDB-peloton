@@ -1,6 +1,14 @@
+//===----------------------------------------------------------------------===//
 //
-// Created by Rui Wang on 16-4-29.
+//                         Peloton
 //
+// hybrid_scan_executor.h
+//
+// Identification: src/backend/executor/hybrid_scan_executor.h
+//
+// Copyright (c) 2015-16, Carnegie Mellon University Database Group
+//
+//===----------------------------------------------------------------------===//
 
 #pragma once
 
@@ -8,6 +16,8 @@
 #include "backend/index/index.h"
 #include "backend/executor/abstract_scan_executor.h"
 #include "backend/planner/hybrid_scan_plan.h"
+
+#include <set>
 
 namespace peloton {
 namespace executor {
