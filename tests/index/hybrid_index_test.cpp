@@ -447,7 +447,7 @@ void LaunchHybridScan(std::unique_ptr<storage::DataTable>& hyadapt_table) {
   CreateIndexScanPredicate(tile_group * tuples_per_tile_group * scalar, expr_types, values);
 
   planner::IndexScanPlan::IndexScanDesc index_scan_desc(
-    index, key_column_ids, expr_types, values, runtime_keys);
+    nullptr, key_column_ids, expr_types, values, runtime_keys);
 
   expression::AbstractExpression *predicate = CreatePredicate(tile_group * tuples_per_tile_group * scalar);
 
@@ -497,7 +497,7 @@ void LaunchHybridScanTwoPredicates(std::unique_ptr<storage::DataTable>& hyadapt_
                                 values);
 
   planner::IndexScanPlan::IndexScanDesc index_scan_desc(
-    index, key_column_ids, expr_types, values, runtime_keys);
+    nullptr, key_column_ids, expr_types, values, runtime_keys);
 
   auto predicate = CreateTwoPredicate(tile_group * tuples_per_tile_group * scalar,
                                       tile_group * tuples_per_tile_group * (scalar + range_size));
