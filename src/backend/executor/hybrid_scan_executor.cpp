@@ -84,7 +84,7 @@ bool HybridScanExecutor::DInit() {
 
         for (auto expr : runtime_keys_) {
           auto value = expr->Evaluate(nullptr, nullptr, executor_context_);
-          LOG_INFO("Evaluated runtime scan key: %s", value.GetInfo().c_str());
+          LOG_TRACE("Evaluated runtime scan key: %s", value.GetInfo().c_str());
           values_.push_back(value);
         }
 
@@ -99,6 +99,7 @@ bool HybridScanExecutor::DInit() {
   } else { // Hybrid type.
     table_tile_group_count_ = table_->GetTileGroupCount();
     int offset = index_->GetIndexedTileGroupOff();
+    std::cout << "Indexed offset " << offset << std::endl;
     indexed_tile_offset_ = (offset == -1) ? INVALID_OID : (oid_t)offset;
 
     if (indexed_tile_offset_ == INVALID_OID) {
@@ -137,7 +138,7 @@ bool HybridScanExecutor::DInit() {
 
         for (auto expr : runtime_keys_) {
           auto value = expr->Evaluate(nullptr, nullptr, executor_context_);
-          LOG_INFO("Evaluated runtime scan key: %s", value.GetInfo().c_str());
+          LOG_TRACE("Evaluated runtime scan key: %s", value.GetInfo().c_str());
           values_.push_back(value);
         }
 
@@ -156,7 +157,6 @@ bool HybridScanExecutor::DInit() {
 
 bool HybridScanExecutor::SeqScanUtil() {
   assert(children_.size() == 0);
-  // LOG_INFO("Hybrid executor, Seq Scan :: 0 child");
 
   assert(table_ != nullptr);
   assert(column_ids_.size() > 0);
@@ -231,7 +231,7 @@ bool HybridScanExecutor::SeqScanUtil() {
       std::unique_ptr<LogicalTile> logical_tile(LogicalTileFactory::GetTile());
       logical_tile->AddColumns(tile_group, column_ids_);
       logical_tile->AddPositionList(std::move(position_list));
-      LOG_INFO("Hybrid executor, Seq Scan :: Got a logical tile");
+      LOG_INFO("Construct logical tile from seq scan");
       SetOutput(logical_tile.release());
       return true;
   }
@@ -261,7 +261,6 @@ bool HybridScanExecutor::DExecute() {
   if (type_ == planner::SEQ) {
       return SeqScanUtil();
   } else if (type_ == planner::INDEX) {
-  //  LOG_INFO("Hybrrd Scan executor, Index Scan :: 0 child");
     assert(children_.size() == 0);
     if (!index_done_) {
       if (index_->GetIndexType() == INDEX_CONSTRAINT_TYPE_PRIMARY_KEY) {
@@ -311,7 +310,7 @@ bool HybridScanExecutor::ExecPrimaryIndexLookup() {
                  SCAN_DIRECTION_TYPE_FORWARD, tuple_location_ptrs);
   }
 
-  LOG_INFO("Tuple_locations.size(): %lu", tuple_location_ptrs.size());
+  LOG_TRACE("Tuple_locations.size(): %lu", tuple_location_ptrs.size());
 
   auto &transaction_manager =
     concurrency::TransactionManagerFactory::GetInstance();
@@ -396,6 +395,7 @@ bool HybridScanExecutor::ExecPrimaryIndexLookup() {
     // Add relevant columns to logical tile
     logical_tile->AddColumns(tile_group, full_column_ids_);
     logical_tile->AddPositionList(std::move(tuples.second));
+    LOG_INFO("Construct logical tile from index scan");
     if (column_ids_.size() != 0) {
       logical_tile->ProjectColumns(full_column_ids_, column_ids_);
     }
