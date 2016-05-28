@@ -23,7 +23,12 @@ bool ConcurrentSkipListIndex<KeyType, ValueType>::InsertEntry(
   UNUSED_ATTRIBUTE const storage::Tuple *key,
   UNUSED_ATTRIBUTE const ItemPointer &location) {
 
-  return false;
+  KeyType index_key;
+  index_key.SetFromKey(key);
+
+  container.insert(key, location);
+
+  return true;
 }
 
 template <typename KeyType, typename ValueType>
