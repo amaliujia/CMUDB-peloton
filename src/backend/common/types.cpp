@@ -700,6 +700,9 @@ std::string IndexTypeToString(IndexType type) {
     case INDEX_TYPE_HASH: {
       return "HASH";
     }
+    case INDEX_TYPE_CONCURRENT_SKIP_LIST: {
+      return "CONCURRENTSKIPLIST";
+    }
   }
   return "INVALID";
 }
