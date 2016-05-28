@@ -21,18 +21,27 @@ namespace index {
 template <typename KeyType, typename ValueType>
 bool ConcurrentSkipListIndex<KeyType, ValueType>::InsertEntry(
   UNUSED_ATTRIBUTE const storage::Tuple *key,
-  UNUSED_ATTRIBUTE const ItemPointer &location) {}
+  UNUSED_ATTRIBUTE const ItemPointer &location) {
+
+  return false;
+}
 
 template <typename KeyType, typename ValueType>
 bool ConcurrentSkipListIndex<KeyType, ValueType>::DeleteEntry(
   UNUSED_ATTRIBUTE const storage::Tuple *key,
-  UNUSED_ATTRIBUTE const ItemPointer &location) {}
+  UNUSED_ATTRIBUTE const ItemPointer &location) {
+
+  return false;
+}
 
 template <typename KeyType, typename ValueType>
 bool ConcurrentSkipListIndex<KeyType, ValueType>::CondInsertEntry(
   UNUSED_ATTRIBUTE const storage::Tuple *key,
   UNUSED_ATTRIBUTE const ItemPointer &location,
-  UNUSED_ATTRIBUTE std::function<bool(const ItemPointer &)> predicate) {}
+  UNUSED_ATTRIBUTE std::function<bool(const ItemPointer &)> predicate) {
+
+  return false;
+}
 
 template <typename KeyType, typename ValueType>
 void ConcurrentSkipListIndex<KeyType, ValueType>::Scan(
