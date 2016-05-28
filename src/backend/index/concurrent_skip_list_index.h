@@ -13,9 +13,7 @@
 #pragma once
 
 #include <map>
-
 #include "backend/index/index.h"
-
 #include "cds/container/skip_list_map_nogc.h"
 
 namespace peloton {
