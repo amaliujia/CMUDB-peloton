@@ -20,6 +20,8 @@
 #include "backend/common/printable.h"
 #include "backend/common/types.h"
 
+#include "cds/container/skip_list_map_rcu.h"
+
 namespace peloton {
 
 class AbstractTuple;
