@@ -21,16 +21,17 @@
 namespace peloton {
 namespace index {
 
-
 template <typename KeyType, typename ValueType>
 class ConcurrentSkipListIndex : Index {
   friend class IndexFactory;
 
-  typedef cds::container::SkipListMap<cds::gc::nogc, KeyType, ValueType> MapType;
-public:
-  ConcurrentSkipListIndex(IndexMetadata *metadata) : Index(metadata) { }
+  typedef cds::container::SkipListMap<cds::gc::nogc, KeyType, ValueType>
+      MapType;
 
-  ~ConcurrentSkipListIndex() { }
+ public:
+  ConcurrentSkipListIndex(IndexMetadata *metadata) : Index(metadata) {}
+
+  ~ConcurrentSkipListIndex() {}
 
   bool InsertEntry(const storage::Tuple *key, const ItemPointer &location);
 
@@ -65,14 +66,8 @@ public:
 
   size_t GetMemoryFootprint() { return 0; }
 
-private:
-
+ private:
   MapType container;
 };
-
 }
 }
-
-
-
-

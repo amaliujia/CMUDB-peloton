@@ -20,58 +20,46 @@ namespace peloton {
 namespace index {
 
 template <typename KeyType, typename ValueType>
-bool ConcurrentSkipListIndex<KeyType, ValueType>::InsertEntry(const storage::Tuple *key, const ItemPointer &location) {
-
-}
-
-template <typename KeyType, typename ValueType>
-bool ConcurrentSkipListIndex<KeyType, ValueType>::DeleteEntry(const storage::Tuple *key, const ItemPointer &location) {
-
-}
+bool ConcurrentSkipListIndex<KeyType, ValueType>::InsertEntry(
+    const storage::Tuple *key, const ItemPointer &location) {}
 
 template <typename KeyType, typename ValueType>
-bool ConcurrentSkipListIndex<KeyType, ValueType>::CondInsertEntry(const storage::Tuple *key, const ItemPointer &location,
-                     std::function<bool(const ItemPointer &)> predicate) {
-
-}
+bool ConcurrentSkipListIndex<KeyType, ValueType>::DeleteEntry(
+    const storage::Tuple *key, const ItemPointer &location) {}
 
 template <typename KeyType, typename ValueType>
-void ConcurrentSkipListIndex<KeyType, ValueType>::Scan(const std::vector<Value> &values,
-          const std::vector<oid_t> &key_column_ids,
-          const std::vector<ExpressionType> &expr_types,
-          const ScanDirectionType &scan_direction,
-          std::vector<ItemPointer> &) {
-
-}
+bool ConcurrentSkipListIndex<KeyType, ValueType>::CondInsertEntry(
+    const storage::Tuple *key, const ItemPointer &location,
+    std::function<bool(const ItemPointer &)> predicate) {}
 
 template <typename KeyType, typename ValueType>
-void ConcurrentSkipListIndex<KeyType, ValueType>::ScanAllKeys(std::vector<ItemPointer> &) {
-
-}
-
-template <typename KeyType, typename ValueType>
-void ConcurrentSkipListIndex<KeyType, ValueType>::ScanKey(const storage::Tuple *key, std::vector<ItemPointer> &) {
-
-}
+void ConcurrentSkipListIndex<KeyType, ValueType>::Scan(
+    const std::vector<Value> &values, const std::vector<oid_t> &key_column_ids,
+    const std::vector<ExpressionType> &expr_types,
+    const ScanDirectionType &scan_direction, std::vector<ItemPointer> &) {}
 
 template <typename KeyType, typename ValueType>
-void ConcurrentSkipListIndex<KeyType, ValueType>::Scan(const std::vector<Value> &values,
-          const std::vector<oid_t> &key_column_ids,
-          const std::vector<ExpressionType> &exprs,
-          const ScanDirectionType &scan_direction,
-          std::vector<ItemPointer *> &result) {
-
-}
+void ConcurrentSkipListIndex<KeyType, ValueType>::ScanAllKeys(
+    std::vector<ItemPointer> &) {}
 
 template <typename KeyType, typename ValueType>
-void ConcurrentSkipListIndex<KeyType, ValueType>::ScanAllKeys(std::vector<ItemPointer *> &result) {
-
-}
+void ConcurrentSkipListIndex<KeyType, ValueType>::ScanKey(
+    const storage::Tuple *key, std::vector<ItemPointer> &) {}
 
 template <typename KeyType, typename ValueType>
-void ConcurrentSkipListIndex<KeyType, ValueType>::ScanKey(const storage::Tuple *key, std::vector<ItemPointer *> &result) {
+void ConcurrentSkipListIndex<KeyType, ValueType>::Scan(
+    const std::vector<Value> &values, const std::vector<oid_t> &key_column_ids,
+    const std::vector<ExpressionType> &exprs,
+    const ScanDirectionType &scan_direction,
+    std::vector<ItemPointer *> &result) {}
 
-}
+template <typename KeyType, typename ValueType>
+void ConcurrentSkipListIndex<KeyType, ValueType>::ScanAllKeys(
+    std::vector<ItemPointer *> &result) {}
+
+template <typename KeyType, typename ValueType>
+void ConcurrentSkipListIndex<KeyType, ValueType>::ScanKey(
+    const storage::Tuple *key, std::vector<ItemPointer *> &result) {}
 
 template <typename KeyType, typename ValueType>
 std::string ConcurrentSkipListIndex<KeyType, ValueType>::GetTypeName() const {
@@ -92,12 +80,11 @@ template class ConcurrentSkipListIndex<GenericKey<24>, ItemPointer *>;
 template class ConcurrentSkipListIndex<GenericKey<32>, ItemPointer *>;
 template class ConcurrentSkipListIndex<GenericKey<48>, ItemPointer *>;
 template class ConcurrentSkipListIndex<GenericKey<64>, ItemPointer *>;
-template class ConcurrentSkipListIndex<GenericKey<96>, ItemPointer *;
+template class ConcurrentSkipListIndex < GenericKey<96>, ItemPointer *;
 template class ConcurrentSkipListIndex<GenericKey<128>, ItemPointer *>;
 template class ConcurrentSkipListIndex<GenericKey<256>, ItemPointer *>;
 template class ConcurrentSkipListIndex<GenericKey<512>, ItemPointer *>;
 
 template class ConcurrentSkipListIndex<TupleKey, ItemPointer *>;
-
 }
 }
