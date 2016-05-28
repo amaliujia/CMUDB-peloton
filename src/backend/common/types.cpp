@@ -711,6 +711,8 @@ IndexType StringToIndexType(std::string str) {
     return INDEX_TYPE_BTREE;
   } else if (str == "BWTREE") {
     return INDEX_TYPE_BWTREE;
+  } else if (str == "CONCURRENTSKIPLIST") {
+    return INDEX_TYPE_CONCURRENT_SKIP_LIST;
   }
   return INDEX_TYPE_INVALID;
 }
