@@ -65,8 +65,11 @@ template <typename KeyType, typename ValueType, class KeyComparator>
 class ConcurrentSkipListIndex : Index {
   friend class IndexFactory;
 
-
-  typedef cds::container::SkipListMap<cds::gc::nogc, KeyType, ValueType> MapType;
+  typedef cds::container::SkipListMap<cds::gc::nogc, KeyType, ValueType,
+    cds::container::skip_list::make_traits<
+          KeyComparator
+        >
+    > MapType;
 
 
  public:
@@ -109,7 +112,7 @@ class ConcurrentSkipListIndex : Index {
 
  private:
   // KeyComparator
-  // KeyComparator comparator;
+   KeyComparator comparator;
 
   MapType container;
 };

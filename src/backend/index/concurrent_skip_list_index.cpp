@@ -21,8 +21,10 @@ namespace index {
 template <typename KeyType, typename ValueType, class KeyComparator>
 ConcurrentSkipListIndex<KeyType, ValueType, KeyComparator>::
           ConcurrentSkipListIndex(IndexMetadata *metadata) :
-            Index(metadata) {}
-            // comparator(metadata) {}
+            Index(metadata),
+            comparator(metadata) {
+
+  }
 
 
 template <typename KeyType, typename ValueType, class KeyComparator>
@@ -33,7 +35,7 @@ bool ConcurrentSkipListIndex<KeyType, ValueType, KeyComparator>::InsertEntry(
   KeyType index_key;
   index_key.SetFromKey(key);
 
-  container.insert(key, new ItemPointer(location));
+  //container.insert(key, new ItemPointer(location));
 
   return true;
 }
