@@ -56,18 +56,17 @@ namespace index {
 //  const catalog::Schema *schema;
 //};
 
-template <class KeyComparator>
-struct peloton_skip_list_traits : public cds::container::skip_list::traits {
-  typedef KeyComparator compare;
-};
+//template <class KeyComparator>
+//struct peloton_skip_list_traits : public cds::container::skip_list::traits {
+//  typedef KeyComparator compare;
+//};
 
 template <typename KeyType, typename ValueType, class KeyComparator>
 class ConcurrentSkipListIndex : Index {
   friend class IndexFactory;
 
 
-  typedef cds::container::SkipListMap<cds::gc::nogc, KeyType, ValueType,
-     peloton_skip_list_traits<KeyComparator>> MapType;
+  typedef cds::container::SkipListMap<cds::gc::nogc, KeyType, ValueType> MapType;
 
 
  public:
