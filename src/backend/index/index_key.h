@@ -95,6 +95,23 @@ inline uint64_t ConvertSignedValueToUnsignedValue<INT64_MAX, int64_t, uint64_t>(
  */
 template <std::size_t KeySize> class IntsKey {
  public:
+  bool operator< (const IntsKey<KeySize> &rhs) const {
+    // lexicographical compare could be faster for fixed N
+    /*
+     * Hopefully the compiler can unroll this loop
+     */
+    for (unsigned int ii = 0; ii < KeySize; ii++) {
+      const uint64_t *lvalue = &data[ii];
+      const uint64_t *rvalue = &rhs.data[ii];
+      if (*lvalue < *rvalue) {
+        return true;
+      } else if (*lvalue > *rvalue) {
+        return false;
+      }
+    }
+    return false;
+  }
+
   /*
    * Take a value that is part of the key (already converted to a uint64_t) and
    *inserts it into the
