@@ -52,7 +52,6 @@ namespace test {
 
 class HybridIndexTests : public PelotonTest {};
 
-/*
 static double projectivity = 1.0;
 static int columncount = 4;
 static size_t tuples_per_tile_group = 100;
@@ -651,7 +650,6 @@ hyadapt_table.get());
 
   index_builder.join();
 }
-*/
 
 }  // namespace tet
 }  // namespace peloton
