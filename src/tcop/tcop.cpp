@@ -11,7 +11,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "tcop/tcop.h"
+
 #include "common/macros.h"
+#include "common/portal.h"
+#include "common/logger.h"
+#include "common/types.h"
 
 #include "parser/parser/pg_query.h"
 
@@ -26,60 +30,70 @@ TrafficCop &TrafficCop::GetInstance(void) {
 
 TrafficCop::TrafficCop() {
 
-  // Initialize the postgres memory context
+  // Initialize the postgresult memory context
   pg_query_init();
 
 }
 
 TrafficCop::~TrafficCop() {
 
-  // Destroy the postgres memory context
+  // Destroy the postgresult memory context
   pg_query_destroy();
 
 }
 
-int TrafficCop::PortalExec(UNUSED_ATTRIBUTE const char *query,
-                           UNUSED_ATTRIBUTE std::vector<ResType> &res,
-                           UNUSED_ATTRIBUTE std::vector<FieldInfoType> &info,
-                           UNUSED_ATTRIBUTE int &rows_change,
-                           UNUSED_ATTRIBUTE std::string &err_msg){
-  return 0;
+Result TrafficCop::ExecuteStatement(const std::string& query,
+                                    std::vector<ResultType> &result,
+                                    std::vector<FieldInfoType> &tuple_descriptor,
+                                    int &rows_changed,
+                                    std::string &error_message){
+  LOG_INFO("Received %s", query.c_str());
+
+  // Prepare the statement
+  auto statement = PrepareStatement(query, error_message);
+
+  if(statement.get() == nullptr){
+    return Result::RESULT_FAILURE;
+  }
+
+  // Then, execute the statement
+  bool unnamed = true;
+  auto status = ExecuteStatement(statement, unnamed,
+                                 result, rows_changed, error_message);
+
+  if(status == Result::RESULT_SUCCESS) {
+    tuple_descriptor = std::move(statement->GetTupleDescriptor());
+  }
+
+  return status;
 }
 
-int TrafficCop::PrepareStmt(UNUSED_ATTRIBUTE const char *query,
-                            UNUSED_ATTRIBUTE PreparedStatement **stmt,
-                            UNUSED_ATTRIBUTE std::string &err_msg){
-  return 0;
+
+Result TrafficCop::ExecuteStatement(UNUSED_ATTRIBUTE const std::shared_ptr<Statement>& statement,
+                                    UNUSED_ATTRIBUTE const bool unnamed,
+                                    UNUSED_ATTRIBUTE std::vector<ResultType> &result,
+                                    UNUSED_ATTRIBUTE int &rows_changed,
+                                    UNUSED_ATTRIBUTE std::string &error_message){
+
+  LOG_INFO("Execute Statement %s", statement->GetStatementName().c_str());
+
+  // This will construct an executor tree
+
+  return Result::RESULT_FAILURE;
 }
 
-int TrafficCop::BindStmt(UNUSED_ATTRIBUTE std::vector<std::pair<int, std::string>> &parameters,
-                         UNUSED_ATTRIBUTE PreparedStatement **stmt,
-                         UNUSED_ATTRIBUTE std::string &err_msg){
-  return 0;
+std::shared_ptr<Statement> TrafficCop::PrepareStatement(UNUSED_ATTRIBUTE const std::string& query,
+                                                        UNUSED_ATTRIBUTE std::string &error_message){
+  std::shared_ptr<Statement> statement;
+
+  LOG_INFO("Prepare Statement %s", query.c_str());
+
+  // This will construct a plan tree
+  // And set the tuple descriptor
+
+  return statement;
 }
 
-void TrafficCop::GetRowDesc(UNUSED_ATTRIBUTE void *stmt,
-                            UNUSED_ATTRIBUTE std::vector<FieldInfoType> &info){
-}
-
-int TrafficCop::ExecPrepStmt(UNUSED_ATTRIBUTE void *stmt,
-                             UNUSED_ATTRIBUTE bool unnamed,
-                             UNUSED_ATTRIBUTE std::vector<ResType> &res,
-                             UNUSED_ATTRIBUTE int &rows_change,
-                             UNUSED_ATTRIBUTE std::string &err_msg){
-  return 0;
-}
-
-void TrafficCop::CopyFromTo(UNUSED_ATTRIBUTE const char *src,
-                            UNUSED_ATTRIBUTE std::vector<unsigned char> &dst){
-}
-
-int TrafficCop::ExecCallback(UNUSED_ATTRIBUTE void *res,
-                             UNUSED_ATTRIBUTE int argc,
-                             UNUSED_ATTRIBUTE char **argv,
-                             UNUSED_ATTRIBUTE char **azColName){
-  return 0;
-}
 
 }  // End tcop namespace
 }  // End peloton namespace

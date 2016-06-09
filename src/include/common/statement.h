@@ -15,21 +15,61 @@
 #include <string>
 #include <vector>
 
+#include "common/types.h"
+
 namespace peloton {
+namespace planner{
+class AbstractPlan;
+}
 
-class PreparedStatement {
+typedef std::pair<std::vector<unsigned char>, std::vector<unsigned char>> ResultType;
 
-};
+// FIELD INFO TYPE : field name, oid (data type), size
+typedef std::tuple<std::string, oid_t, size_t> FieldInfoType;
 
 class Statement {
 
  public:
 
-  // logical name of statement
-  std::string stmt_name;
+  Statement() = delete;
+  Statement(const Statement &) = delete;
+  Statement &operator=(const Statement &) = delete;
+  Statement(Statement &&) = delete;
+  Statement &operator=(Statement &&) = delete;
 
-  // pointer to prepared statement
-  PreparedStatement *sql_stmt;
+  Statement(const std::string& statement_name,
+            const std::string& query_string,
+            const std::string& query_type,
+            const std::vector<int32_t>& param_types,
+            const std::vector<FieldInfoType>& tuple_descriptor,
+            std::unique_ptr<planner::AbstractPlan> plan_tree);
+
+  ~Statement();
+
+  std::vector<FieldInfoType> GetTupleDescriptor() const;
+
+  void SetStatementName(const std::string& statement_name);
+
+  std::string GetStatementName() const;
+
+  void SetQueryString(const std::string& query_string);
+
+  std::string GetQueryString() const;
+
+  void SetQueryType(const std::string& query_type);
+
+  std::string GetQueryType() const;
+
+  void SetParamTypes(const std::vector<int32_t>& param_types);
+
+  std::vector<int32_t> GetParamTypes() const;
+
+  void SetTupleDescriptor(const std::vector<FieldInfoType>& tuple_descriptor);
+
+ private:
+
+  // logical name of statement
+  std::string statement_name;
 
   // query string
   std::string query_string;
@@ -39,6 +79,12 @@ class Statement {
 
   // format codes of the parameters
   std::vector<int32_t> param_types;
+
+  // schema of result tuple
+  std::vector<FieldInfoType> tuple_descriptor;
+
+  // cached plan tree
+  std::unique_ptr<planner::AbstractPlan> plan_tree;
 
 };
 

@@ -29,20 +29,20 @@ namespace peloton {
 namespace wire {
 
 // Prepares statment cache
-thread_local peloton::Cache<std::string, Statement> cache_;
+thread_local peloton::Cache<std::string, Statement> statement_cache_;
 
 // Query portal handler
 thread_local std::unordered_map<std::string, std::shared_ptr<Portal>> portals_;
 
 // Hardcoded authentication strings used during session startup. To be removed
 const std::unordered_map<std::string, std::string>
-    PacketManager::parameter_status_map =
-        boost::assign::map_list_of("application_name", "psql")(
-            "client_encoding", "UTF8")("DateStyle", "ISO, MDY")(
+PacketManager::parameter_status_map =
+    boost::assign::map_list_of("application_name", "psql")(
+        "client_encoding", "UTF8")("DateStyle", "ISO, MDY")(
             "integer_datetimes", "on")("IntervalStyle", "postgres")(
-            "is_superuser", "on")("server_encoding", "UTF8")(
-            "server_version", "9.5devel")("session_authorization", "postgres")(
-            "standard_conforming_strings", "on")("TimeZone", "US/Eastern");
+                "is_superuser", "on")("server_encoding", "UTF8")(
+                    "server_version", "9.5devel")("session_authorization", "postgres")(
+                        "standard_conforming_strings", "on")("TimeZone", "US/Eastern");
 
 /*
  * close_client - Close the socket of the underlying client
@@ -104,7 +104,7 @@ bool PacketManager::ProcessStartupPacket(Packet *pkt,
 
   // Send the parameterStatus map ('S')
   for (auto it = parameter_status_map.begin(); it != parameter_status_map.end();
-       it++) {
+      it++) {
     MakeHardcodedParameterStatus(responses, *it);
   }
 
@@ -113,16 +113,19 @@ bool PacketManager::ProcessStartupPacket(Packet *pkt,
   return true;
 }
 
-void PacketManager::PutRowDesc(std::vector<FieldInfoType> &rowdesc,
-                               ResponseBuffer &responses) {
-  if (!rowdesc.size()) return;
+void PacketManager::PutTupleDescriptor(const std::vector<FieldInfoType> &tuple_descriptor,
+                                       ResponseBuffer &responses) {
 
-  LOG_INFO("Put RowDescription");
+  if (tuple_descriptor.empty())
+    return;
+
+  LOG_INFO("Put TupleDescriptor");
+
   std::unique_ptr<Packet> pkt(new Packet());
   pkt->msg_type = 'T';
-  PacketPutInt(pkt, rowdesc.size(), 2);
+  PacketPutInt(pkt, tuple_descriptor.size(), 2);
 
-  for (auto col : rowdesc) {
+  for (auto col : tuple_descriptor) {
     LOG_INFO("column name: %s", std::get<0>(col).c_str());
     PacketPutString(pkt, std::get<0>(col));
     // TODO: Table Oid (int32)
@@ -141,7 +144,7 @@ void PacketManager::PutRowDesc(std::vector<FieldInfoType> &rowdesc,
   responses.push_back(std::move(pkt));
 }
 
-void PacketManager::SendDataRows(std::vector<ResType> &results,
+void PacketManager::SendDataRows(std::vector<ResultType> &results,
                                  int colcount, int &rows_affected,
                                  ResponseBuffer &responses) {
   if (!results.size() || !colcount) return;
@@ -241,35 +244,39 @@ void PacketManager::ExecQueryMessage(Packet *pkt, ResponseBuffer &responses) {
   auto &tcop = tcop::TrafficCop::GetInstance();
 
   // iterate till before the trivial string after the last ';'
-  for (auto query = queries.begin(); query != queries.end() - 1; query++) {
-    if (query->empty()) {
+  for (auto query : queries) {
+    if (query.empty()) {
       SendEmptyQueryResponse(responses);
       SendReadyForQuery(TXN_IDLE, responses);
       return;
     }
 
-    std::vector<ResType> results;
-    std::vector<FieldInfoType> rowdesc;
-    std::string err_msg;
+    std::vector<ResultType> result;
+    std::vector<FieldInfoType> tuple_descriptor;
+    std::string error_message;
     int rows_affected;
 
     // execute the query in Sqlite
-    int isfailed =
-        tcop.PortalExec(query->c_str(), results, rowdesc, rows_affected, err_msg);
+    auto status = tcop.ExecuteStatement(query,
+                                        result,
+                                        tuple_descriptor,
+                                        rows_affected,
+                                        error_message);
 
-    if (isfailed) {
-      SendErrorResponse({{'M', err_msg}}, responses);
+    // check status
+    if (status ==  Result::RESULT_FAILURE) {
+      SendErrorResponse({{'M', error_message}}, responses);
       break;
     }
 
     // send the attribute names
-    PutRowDesc(rowdesc, responses);
+    PutTupleDescriptor(tuple_descriptor, responses);
 
     // send the result rows
-    SendDataRows(results, rowdesc.size(), rows_affected, responses);
+    SendDataRows(result, tuple_descriptor.size(), rows_affected, responses);
 
     // TODO: should change to query_type
-    CompleteCommand(*query, rows_affected, responses);
+    CompleteCommand(query, rows_affected, responses);
   }
 
   SendReadyForQuery('I', responses);
@@ -280,33 +287,41 @@ void PacketManager::ExecQueryMessage(Packet *pkt, ResponseBuffer &responses) {
  */
 void PacketManager::ExecParseMessage(Packet *pkt, ResponseBuffer &responses) {
   LOG_INFO("PARSE message");
-  std::string err_msg, prep_stmt_name, query, query_type;
-  GetStringToken(pkt, prep_stmt_name);
+  std::string error_message, statement_name, query_string, query_type;
+  GetStringToken(pkt, statement_name);
 
   // Read prepare statement name
-  PreparedStatement *stmt = nullptr;
-  LOG_INFO("Prep stmt: %s", prep_stmt_name.c_str());
+  LOG_INFO("Prep stmt: %s", statement_name.c_str());
   // Read query string
-  GetStringToken(pkt, query);
-  LOG_INFO("Parse Query: %s", query.c_str());
-
-  auto &tcop = tcop::TrafficCop::GetInstance();
+  GetStringToken(pkt, query_string);
+  LOG_INFO("Parse Query: %s", query_string.c_str());
 
   skipped_stmt_ = false;
-  query_type = get_query_type(query);
+  query_type = get_query_type(query_string);
   if (!HardcodedExecuteFilter(query_type)) {
     // query to be filtered, don't execute
     skipped_stmt_ = true;
-    skipped_query_ = std::move(query);
+    skipped_query_string_ = std::move(query_string);
     skipped_query_type_ = std::move(query_type);
     LOG_INFO("Statement to be skipped");
-  } else {
-    // Prepare statement
-    int is_failed = tcop.PrepareStmt(query.c_str(), &stmt, err_msg);
-    if (is_failed) {
-      SendErrorResponse({{'M', err_msg}}, responses);
-      SendReadyForQuery(txn_state, responses);
-    }
+
+    // Send Parse complete response
+    std::unique_ptr<Packet> response(new Packet());
+    response->msg_type = '1';
+    responses.push_back(std::move(response));
+    return;
+  }
+
+  // Prepare statement
+  std::shared_ptr<Statement> statement;
+  auto &tcop = tcop::TrafficCop::GetInstance();
+  statement = std::move(tcop.PrepareStatement(query_string,
+                                              error_message));
+
+  if (statement.get() == nullptr) {
+    SendErrorResponse({{'M', error_message}}, responses);
+    SendReadyForQuery(txn_state, responses);
+    return;
   }
 
   // Read number of params
@@ -320,36 +335,38 @@ void PacketManager::ExecParseMessage(Packet *pkt, ResponseBuffer &responses) {
     param_types[i] = param_type;
   }
 
-  // Cache the received qury
-  std::shared_ptr<Statement> entry(new Statement());
-  entry->stmt_name = prep_stmt_name;
-  entry->query_string = query;
-  entry->query_type = std::move(query_type);
-  entry->sql_stmt = stmt;
-  entry->param_types = std::move(param_types);
+  // Cache the received query
+  bool unnamed_query = statement_name.empty();
+  statement->SetStatementName(statement_name);
+  statement->SetQueryString(query_string);
+  statement->SetQueryType(query_type);
+  statement->SetParamTypes(param_types);
 
-  if (prep_stmt_name.empty()) {
-    // Unnamed statement
-    unnamed_entry = entry;
-  } else {
-    cache_.insert(std::make_pair(std::move(prep_stmt_name), entry));
+  // Unnamed statement
+  if (unnamed_query) {
+    LOG_INFO("Setting unnamed statement");
+    unnamed_statement = statement;
+  }
+  else {
+    LOG_INFO("Setting named statement with name : %s", statement_name.c_str());
+    auto entry = std::make_pair(statement_name, statement);
+    statement_cache_.insert(entry);
   }
 
-  std::unique_ptr<Packet> response(new Packet());
-
   // Send Parse complete response
+  std::unique_ptr<Packet> response(new Packet());
   response->msg_type = '1';
   responses.push_back(std::move(response));
 }
 
 void PacketManager::ExecBindMessage(Packet *pkt, ResponseBuffer &responses) {
-  std::string portal_name, prep_stmt_name;
+  std::string portal_name, statement_name;
   // BIND message
   LOG_INFO("BIND message");
   GetStringToken(pkt, portal_name);
   LOG_INFO("Portal name: %s", portal_name.c_str());
-  GetStringToken(pkt, prep_stmt_name);
-  LOG_INFO("Prep stmt name: %s", prep_stmt_name.c_str());
+  GetStringToken(pkt, statement_name);
+  LOG_INFO("Prep stmt name: %s", statement_name.c_str());
 
   if (skipped_stmt_) {
     // send bind complete
@@ -371,39 +388,51 @@ void PacketManager::ExecBindMessage(Packet *pkt, ResponseBuffer &responses) {
   // error handling
   int num_params = PacketGetInt(pkt, 2);
   if (num_params_format != num_params) {
-    std::string err_msg =
+    std::string error_message =
         "Malformed request: num_params_format is not equal to num_params";
-    SendErrorResponse({{'M', err_msg}}, responses);
+    SendErrorResponse({{'M', error_message}}, responses);
     return;
   }
 
   // Get statement info generated in PARSE message
-  PreparedStatement *stmt = nullptr;
-  std::shared_ptr<Statement> entry;
-  if (prep_stmt_name.empty()) {
-    LOG_INFO("Unnamed statement");
-    entry = unnamed_entry;
-  } else {
-    // fetch the statement ID from the cache
-    auto itr = cache_.find(prep_stmt_name);
-    if (itr != cache_.end()) {
-      entry = *itr;
-    } else {
-      std::string err_msg = "Prepared statement name already exists";
-      SendErrorResponse({{'M', err_msg}}, responses);
+  std::shared_ptr<Statement> statement;
+
+  if (statement_name.empty()) {
+    LOG_INFO("Getting Unnamed statement");
+    statement = unnamed_statement;
+
+    // Check unnamed statement
+    if(statement.get() == nullptr){
+      std::string error_message = "Invalid unnamed statement";
+      LOG_ERROR("%s", error_message.c_str());
+      SendErrorResponse({{'M', error_message}}, responses);
       return;
     }
   }
-  stmt = entry->sql_stmt;
-  const auto &query_string = entry->query_string;
-  const auto &query_type = entry->query_type;
+  else {
+    auto statement_cache_itr = statement_cache_.find(statement_name);
+    // Did not find statement with same name
+    if (statement_cache_itr != statement_cache_.end()) {
+      statement = *statement_cache_itr;
+    }
+    // Found statement with same name
+    else {
+      std::string error_message = "Prepared statement name already exists";
+      LOG_ERROR("%s", error_message.c_str());
+      SendErrorResponse({{'M', error_message}}, responses);
+      return;
+    }
+  }
+
+  const auto &query_string = statement->GetQueryString();
+  const auto &query_type = statement->GetQueryType();
 
   // check if the loaded statement needs to be skipped
   skipped_stmt_ = false;
   if (!HardcodedExecuteFilter(query_type)) {
     skipped_stmt_ = true;
-    skipped_query_ = query_string;
-    LOG_INFO("Statement skipped: %s", skipped_query_.c_str());
+    skipped_query_string_ = query_string;
+    LOG_INFO("Statement skipped: %s", skipped_query_string_.c_str());
     std::unique_ptr<Packet> response(new Packet());
     // Send Parse complete response
     response->msg_type = '2';
@@ -413,6 +442,8 @@ void PacketManager::ExecBindMessage(Packet *pkt, ResponseBuffer &responses) {
 
   // Group the parameter types and thae parameters in this vector
   std::vector<std::pair<int, std::string>> bind_parameters;
+  auto param_types = statement->GetParamTypes();
+
   PktBuf param;
   for (int param_idx = 0; param_idx < num_params; param_idx++) {
     int param_len = PacketGetInt(pkt, 4);
@@ -429,7 +460,7 @@ void PacketManager::ExecBindMessage(Packet *pkt, ResponseBuffer &responses) {
         bind_parameters.push_back(std::make_pair(ValueType::VALUE_TYPE_VARCHAR, param_str));
       } else {
         // BINARY mode
-        switch (entry->param_types[param_idx]) {
+        switch (param_types[param_idx]) {
           case POSTGRES_VALUE_TYPE_INTEGER: {
             int int_val = 0;
             for (size_t i = 0; i < sizeof(int); ++i) {
@@ -450,36 +481,25 @@ void PacketManager::ExecBindMessage(Packet *pkt, ResponseBuffer &responses) {
             // LOG_INFO("Bind param (size: %d) : %lf", param_len, float_val);
           } break;
           default: {
-            LOG_ERROR("Do not support data type: %d",
-                      entry->param_types[param_idx]);
+            LOG_ERROR("Do not support data type: %d", param_types[param_idx]);
           } break;
         }
       }
     }
   }
 
-  std::string err_msg;
-  auto &tcop = tcop::TrafficCop::GetInstance();
-  bool is_failed = tcop.BindStmt(bind_parameters, &stmt, err_msg);
-  if (is_failed) {
-    SendErrorResponse({{'M', err_msg}}, responses);
-    SendReadyForQuery(txn_state, responses);
-  }
-
-  // TODO: replace this with a constructor
-  std::shared_ptr<Portal> portal(new Portal());
-  portal->query_string = query_string;
-  portal->stmt = stmt;
-  portal->prep_stmt_name = prep_stmt_name;
-  portal->portal_name = portal_name;
-  portal->query_type = query_type;
+  // Construct a portal
+  auto portal = new Portal(portal_name, statement, bind_parameters);
+  std::shared_ptr<Portal> portal_reference(portal);
 
   auto itr = portals_.find(portal_name);
-  if (itr == portals_.end()) {
-    portals_.insert(std::make_pair(portal_name, portal));
-  } else {
-    std::shared_ptr<Portal> p = itr->second;
-    itr->second = portal;
+  // Found portal name in portal map
+  if (itr != portals_.end()) {
+    itr->second = portal_reference;
+  }
+  // Create a new entry in portal map
+  else {
+    portals_.insert(std::make_pair(portal_name, portal_reference));
   }
 
   // send bind complete
@@ -491,52 +511,56 @@ void PacketManager::ExecBindMessage(Packet *pkt, ResponseBuffer &responses) {
 void PacketManager::ExecDescribeMessage(Packet *pkt,
                                         ResponseBuffer &responses) {
   PktBuf mode;
-  std::string name;
+  std::string portal_name;
   LOG_INFO("DESCRIBE message");
   PacketGetBytes(pkt, 1, mode);
   LOG_INFO("mode %c", mode[0]);
-  GetStringToken(pkt, name);
-  LOG_INFO("name: %s", name.c_str());
+  GetStringToken(pkt, portal_name);
+  LOG_INFO("portal name: %s", portal_name.c_str());
+
   if (mode[0] == 'P') {
-    auto portal_itr = portals_.find(name);
+    auto portal_itr = portals_.find(portal_name);
+
+    // TODO: error handling here
     if (portal_itr == portals_.end()) {
-      // TODO: error handling here
-      std::vector<FieldInfoType> rowdesc;
-      PutRowDesc(rowdesc, responses);
+      LOG_INFO("Did not find portal : %s", portal_name.c_str());
+      std::vector<FieldInfoType> tuple_descriptor;
+      PutTupleDescriptor(tuple_descriptor, responses);
       return;
     }
-    std::shared_ptr<Portal> p = portal_itr->second;
-    auto &tcop = tcop::TrafficCop::GetInstance();
-    tcop.GetRowDesc(p->stmt, p->tuple_desc);
-    PutRowDesc(p->tuple_desc, responses);
+
+    std::shared_ptr<Portal> portal = portal_itr->second;
+    auto statement = portal->GetStatement();
+    PutTupleDescriptor(statement->GetTupleDescriptor(), responses);
   }
+
 }
 
 void PacketManager::ExecExecuteMessage(Packet *pkt, ResponseBuffer &responses) {
   // EXECUTE message
   LOG_INFO("EXECUTE message");
-  std::vector<ResType> results;
-  std::string err_msg, portal_name;
-  PreparedStatement *stmt = nullptr;
-  int rows_affected = 0, is_failed;
+  std::vector<ResultType> results;
+  std::string error_message, portal_name;
+  int rows_affected = 0;
   GetStringToken(pkt, portal_name);
 
   // covers weird JDBC edge case of sending double BEGIN statements. Don't
   // execute them
   if (skipped_stmt_) {
-    LOG_INFO("Statement skipped: %s", skipped_query_.c_str());
+    LOG_INFO("Statement skipped: %s", skipped_query_string_.c_str());
     CompleteCommand(skipped_query_type_, rows_affected, responses);
     skipped_stmt_ = false;
     return;
   }
 
   auto portal = portals_[portal_name];
-  const auto &query_string = portal->query_string;
-  const auto &query_type = portal->query_type;
-  stmt = portal->stmt;
-  PL_ASSERT(stmt != nullptr);
+  auto statement = portal->GetStatement();
+  PL_ASSERT(statement.get() != nullptr);
+  const auto &query_string = statement->GetQueryString();
+  const auto &query_type = statement->GetQueryType();
 
-  bool unnamed = portal->prep_stmt_name.empty();
+  auto statement_name = statement->GetStatementName();
+  bool unnamed = statement_name.empty();
 
   LOG_INFO("Executing query: %s", query_string.c_str());
 
@@ -546,10 +570,15 @@ void PacketManager::ExecExecuteMessage(Packet *pkt, ResponseBuffer &responses) {
   }
 
   auto &tcop = tcop::TrafficCop::GetInstance();
-  is_failed = tcop.ExecPrepStmt(stmt, unnamed, results, rows_affected, err_msg);
-  if (is_failed) {
-    LOG_INFO("Failed to execute: %s", err_msg.c_str());
-    SendErrorResponse({{'M', err_msg}}, responses);
+  auto status = tcop.ExecuteStatement(statement,
+                                      unnamed,
+                                      results,
+                                      rows_affected,
+                                      error_message);
+
+  if (status == Result::RESULT_FAILURE) {
+    LOG_INFO("Failed to execute: %s", error_message.c_str());
+    SendErrorResponse({{'M', error_message}}, responses);
     SendReadyForQuery(txn_state, responses);
   }
 
@@ -559,7 +588,8 @@ void PacketManager::ExecExecuteMessage(Packet *pkt, ResponseBuffer &responses) {
   }
 
   // put_row_desc(portal->rowdesc, responses);
-  SendDataRows(results, portal->tuple_desc.size(), rows_affected, responses);
+  auto tuple_descriptor = statement->GetTupleDescriptor();
+  SendDataRows(results, tuple_descriptor.size(), rows_affected, responses);
   CompleteCommand(query_type, rows_affected, responses);
 }
 

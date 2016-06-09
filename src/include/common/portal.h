@@ -14,35 +14,41 @@
 
 #include <string>
 #include <vector>
-#include <tuple>
-
-#include "common/statement.h"
+#include <memory>
 
 namespace peloton {
 
-typedef std::pair<std::vector<unsigned char>, std::vector<unsigned char>>
-    ResType;
-
-// fieldinfotype: field name, oid (data type), size
-typedef std::tuple<std::string, int, int> FieldInfoType;
+class Statement;
 
 class Portal {
 
-public:
+ public:
 
+  Portal() = delete;
+  Portal(const Portal &) = delete;
+  Portal &operator=(const Portal &) = delete;
+  Portal(Portal &&) = delete;
+  Portal &operator=(Portal &&) = delete;
+
+  Portal(const std::string& portal_name,
+         std::shared_ptr<Statement> statement,
+         const std::vector<std::pair<int, std::string>>& bind_parameters);
+
+  ~Portal();
+
+  std::shared_ptr<Statement> GetStatement() const;
+
+ private:
+
+  // Portal name
   std::string portal_name;
 
-  // logical name of prep stmt
-  std::string prep_stmt_name;
+  // Prepared statement
+  std::shared_ptr<Statement> statement;
 
-  // stores the attribute names
-  std::vector<FieldInfoType> tuple_desc;
+  // Group the parameter types and the parameters in this vector
+  std::vector<std::pair<int, std::string>> bind_parameters;
 
-  std::string query_string;
-
-  std::string query_type;
-
-  PreparedStatement *stmt;
 };
 
 }  // namespace peloton
