@@ -101,6 +101,16 @@ class BWTreeIndex : public Index {
   // TODO: Implement this
   size_t GetMemoryFootprint() { return 0; }
 
+  // Get the indexed tile group offset
+  virtual int GetIndexedTileGroupOff() {
+    return indexed_tile_group_offset_.load();
+  }
+
+  virtual void IncreamentIndexedTileGroupOff() {
+    indexed_tile_group_offset_++;
+    return;
+  }
+
  protected:
   // equality checker and comparator
   KeyComparator comparator;
@@ -111,6 +121,8 @@ class BWTreeIndex : public Index {
 
   // synch helper
   RWLock index_lock;
+
+  std::atomic<int> indexed_tile_group_offset_;
 };
 
 }  // End index namespace
