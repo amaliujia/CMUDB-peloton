@@ -192,7 +192,9 @@ bool Index::ConstructLowerBoundTuple(
     if (key_column_itr != key_column_ids.end()) {
       auto offset = std::distance(key_column_ids.begin(), key_column_itr);
       // Equality constraint
-      if (expr_types[offset] == EXPRESSION_TYPE_COMPARE_EQUAL) {
+      if (expr_types[offset] == EXPRESSION_TYPE_COMPARE_EQUAL ||
+        expr_types[offset] == EXPRESSION_TYPE_COMPARE_GREATERTHAN ||
+        expr_types[offset] == EXPRESSION_TYPE_COMPARE_GREATERTHANOREQUALTO) {
         placeholder = true;
         value = values[offset];
       }
